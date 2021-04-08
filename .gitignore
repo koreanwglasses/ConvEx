@@ -1,2 +1,5 @@
+.vscode
 node_modules
 dist
+build
+server/config.local.ts

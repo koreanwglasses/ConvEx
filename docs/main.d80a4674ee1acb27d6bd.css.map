@@ -1,1 +1,0 @@
-{"version":3,"sources":["webpack:///./src/app.module.css"],"names":[],"mappings":"AAAA;EACE,mBAAmB;EACnB,iBAAiB;EACjB,mBAAmB;EACnB,kBAAkB;EAClB;AACF,C","file":"main.d80a4674ee1acb27d6bd.css","sourcesContent":[".container {\n  border-style: solid;\n  border-width: 1px;\n  border-color: black;\n  width: fit-content;\n  padding: 5px\n}"],"sourceRoot":""}
