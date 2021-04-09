@@ -10,6 +10,7 @@ import createMemoryStore from "memorystore";
 import session from "express-session";
 import { User } from "discord.js";
 import { asyncFilter } from "../utils";
+import asyncHandler from "express-async-handler";
 
 const app = express();
 
@@ -70,29 +71,35 @@ app.get(
 // Discord //
 /////////////
 
-app.get("/api/guild/list", async (req, res) => {
-  if (req.isUnauthenticated()) return res.sendStatus(401);
+app.get(
+  "/api/guild/list",
+  asyncHandler(async (req, res) => {
+    if (req.isUnauthenticated()) return res.sendStatus(401);
 
-  const user = req.user as User;
-  const guilds = await asyncFilter(Discord.listGuilds(), (guild) =>
-    Discord.hasPermission(user.id, guild.id, "canView")
-  );
-  return res.send(guilds);
-});
+    const user = req.user as User;
+    const guilds = await asyncFilter(Discord.listGuilds(), (guild) =>
+      Discord.hasPermission(user.id, guild.id, "canView")
+    );
+    return res.send(guilds);
+  })
+);
 
-app.get("/api/guild/fetch/:guildId", async (req, res) => {
-  const { guildId } = req.params;
+app.get(
+  "/api/guild/fetch/:guildId",
+  asyncHandler(async (req, res) => {
+    const { guildId } = req.params;
 
-  if (req.isUnauthenticated()) return res.sendStatus(401);
+    if (req.isUnauthenticated()) return res.sendStatus(401);
 
-  const user = req.user as User;
+    const user = req.user as User;
 
-  if (!(await Discord.hasPermission(user.id, guildId, "canView")))
-    return res.sendStatus(401);
+    if (!(await Discord.hasPermission(user.id, guildId, "canView")))
+      return res.sendStatus(401);
 
-  const guild = await Discord.fetchGuild(guildId);
-  return res.send(guild);
-});
+    const guild = await Discord.fetchGuild(guildId);
+    return res.send(guild);
+  })
+);
 
 ////////////
 // Client //

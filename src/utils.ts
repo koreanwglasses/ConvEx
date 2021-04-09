@@ -8,16 +8,7 @@ export const asyncFilter = async <T>(
     Promise.resolve([] as T[])
   );
 
-/**
- * Joins paths while removing traling slashes
- */
-export const join = (...paths: string[]) =>
-  paths.reduce(
-    (previousValue, currentValue) =>
-      (previousValue.endsWith("/")
-        ? previousValue.substring(0, previousValue.length - 1)
-        : previousValue) +
-      "/" +
-      currentValue,
-    ""
-  );
+export const removeTrailingSlashes = (path: string) =>
+  path.match(/^(.*?)\/*$/)[1];
+export const join = (path0: string, ...paths: string[]) =>
+  paths.reduce((a, b) => `${removeTrailingSlashes(a)}/${b}`, path0);

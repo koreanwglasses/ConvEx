@@ -1,5 +1,4 @@
 import * as React from "react";
-import styles from "./app.module.css";
 import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { Home } from "./components/home";
 import { Dashboard } from "./components/dashboard";
