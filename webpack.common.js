@@ -4,7 +4,7 @@ module.exports = {
   // Enable sourcemaps for debugging webpack's output.
   devtool: "source-map",
 
-  entry: "./client/index.tsx",
+  entry: "./src/client/index.tsx",
 
   resolve: {
     // Add '.ts' and '.tsx' as resolvable extensions.
@@ -57,7 +57,7 @@ module.exports = {
               "https://unpkg.com/react@17/umd/react.development.js",
               "https://unpkg.com/react-dom@17/umd/react-dom.development.js",
             ]),
-        "./main.js",
+        "/main.js",
       ],
     }),
   ],
