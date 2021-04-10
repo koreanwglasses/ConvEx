@@ -9,3 +9,5 @@ const socket = io(URL, { autoConnect: false }) as SocketIOClient.Socket & {
 socket.onAny((event, ...args) => {
   console.log(event, args);
 });
+
+export default socket;

@@ -5,7 +5,6 @@ import passport from "passport";
 import { resolve } from "path";
 import * as config from "../../config";
 import { asyncFilter } from "../../utils";
-import * as Auth from "../middlewares/auth";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "./discord";
 
@@ -23,7 +22,6 @@ app.use(sessionMiddleware);
 // Authentication //
 ////////////////////
 
-Auth.init();
 app.use(passport.initialize());
 app.use(passport.session());
 
