@@ -14,8 +14,8 @@ import * as Sessions from "./middlewares/sessions";
   Sessions.init();
   Auth.init();
 
-  const { app } = App.init();
-  const { server: httpServer } = Server.init({ app });
+  const app = App.init();
+  const httpServer = Server.init({ app });
   Sockets.init({ httpServer });
 
   console.log("Logging into Discord...");

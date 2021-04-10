@@ -133,5 +133,5 @@ export const init = () => {
     );
   });
 
-  return { app };
+  return app;
 };

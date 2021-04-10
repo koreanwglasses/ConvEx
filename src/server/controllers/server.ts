@@ -10,5 +10,5 @@ export const start = () =>
 
 export const init = ({ app }: { app: Express.Application }) => {
   server = createServer(app);
-  return { server };
+  return server;
 };
