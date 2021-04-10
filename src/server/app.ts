@@ -14,6 +14,8 @@ import asyncHandler from "express-async-handler";
 
 const app = express();
 
+app.use(express.json());
+
 //////////////
 // Sessions //
 //////////////
@@ -71,7 +73,7 @@ app.get(
 // Discord //
 /////////////
 
-app.get(
+app.post(
   "/api/guild/list",
   asyncHandler(async (req, res) => {
     if (req.isUnauthenticated()) return res.sendStatus(401);
@@ -84,10 +86,10 @@ app.get(
   })
 );
 
-app.get(
-  "/api/guild/fetch/:guildId",
+app.post(
+  "/api/guild",
   asyncHandler(async (req, res) => {
-    const { guildId } = req.params;
+    const { guildId } = req.body;
 
     if (req.isUnauthenticated()) return res.sendStatus(401);
 
@@ -98,6 +100,49 @@ app.get(
 
     const guild = await Discord.fetchGuild(guildId);
     return res.send(guild);
+  })
+);
+
+app.post(
+  "/api/channel",
+  asyncHandler(async (req, res) => {
+    const { guildId, channelId } = req.body;
+
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+
+    const user = req.user as User;
+
+    if (!(await Discord.hasPermission(user.id, guildId, "canView")))
+      return res.sendStatus(401);
+
+    const guild = await Discord.fetchGuild(guildId);
+    const channel = guild.channels.resolve(channelId);
+
+    return res.send(channel);
+  })
+);
+
+app.post(
+  "/api/message",
+  asyncHandler(async (req, res) => {
+    const { guildId, channelId, limit = 100 } = req.body;
+
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+
+    const user = req.user as User;
+
+    if (!(await Discord.hasPermission(user.id, guildId, "canView")))
+      return res.sendStatus(401);
+
+    const guild = await Discord.fetchGuild(guildId);
+    const channel = guild.channels.resolve(channelId);
+
+    if (!channel.isText())
+      return res.status(500).send("Channel is not a text channel");
+
+    const messages = channel.messages.fetch({ limit });
+
+    return messages;
   })
 );
 

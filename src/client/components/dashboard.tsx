@@ -1,7 +1,5 @@
 import * as React from "react";
 import { Layout } from "./layout";
-import { Guild } from "discord.js";
-import { useAPI } from "../hooks/use-api";
 import {
   Link,
   Route,
@@ -9,7 +7,11 @@ import {
   useParams,
   useRouteMatch,
 } from "react-router-dom";
-import { join } from "../../utils";
+import { asyncFilter, join } from "../../utils";
+import { api, Channel } from "../api";
+import to from "await-to-js";
+import { useAPI } from "../hooks/use-api";
+import { useAwait } from "../hooks/use-await";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -29,7 +31,7 @@ export const Dashboard = () => {
 };
 
 const GuildSelector = () => {
-  const [err, guilds] = useAPI<Guild[]>("/api/guild/list");
+  const [err, guilds] = useAPI(api("/api/guild/list"));
   const { url } = useRouteMatch();
   return (
     <>
@@ -53,17 +55,37 @@ const GuildSelector = () => {
 
 const GuildDashboard = () => {
   const { guildId } = useParams() as { guildId: string };
-  const [err, guild] = useAPI<Guild>(`/api/guild/fetch/${guildId}`);
+  const [guildErr, guild] = useAPI(api("/api/guild", { guildId }));
+  const channels = useAwait(
+    guild &&
+      Promise.all(
+        guild.channels.map((channelId) =>
+          api("/api/channel", { guildId, channelId })
+        )
+      ),
+    undefined,
+    [guild]
+  );
+  const textChannels = channels?.filter((channel) => channel.type === "text");
 
   return (
     <>
-      {err ? (
-        <i>Error fetching guild : {err.message}</i>
+      {guildErr ? (
+        <i>Error fetching guild : {guildErr.message}</i>
       ) : !guild ? (
         <i>Loading...</i>
       ) : (
-        <h3>{guild.id}</h3>
+        <>
+          <h3>{guild.name}</h3>
+          {textChannels?.map((channel) => (
+            <ChannelView channel={channel} key={channel.id} />
+          ))}
+        </>
       )}
     </>
   );
+};
+
+const ChannelView = ({ channel }: { channel: Channel }) => {
+  return <div style={{ borderStyle: "solid" }}>{channel.id}</div>;
 };
