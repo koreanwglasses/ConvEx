@@ -123,7 +123,7 @@ app.post(
 );
 
 app.post(
-  "/api/message",
+  "/api/message/list",
   asyncHandler(async (req, res) => {
     const { guildId, channelId, limit = 100 } = req.body;
 
@@ -140,9 +140,9 @@ app.post(
     if (!channel.isText())
       return res.status(500).send("Channel is not a text channel");
 
-    const messages = channel.messages.fetch({ limit });
+    const messages = await channel.messages.fetch({ limit });
 
-    return messages;
+    return res.send(messages);
   })
 );
 

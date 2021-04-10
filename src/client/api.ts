@@ -13,16 +13,11 @@ export function api(
 ): Promise<Channel>;
 
 export function api(
-  endpoint: "/api/message",
+  endpoint: "/api/message/list",
   body: { guildId: string; channelId: string; limit?: number }
-): Promise<Message>;
+): Promise<Message[]>;
 
-export function api<T = unknown>(endpoint: string, body?: unknown): Promise<T>;
-
-export async function api<T = unknown>(
-  endpoint: string,
-  body?: unknown
-): Promise<T> {
+export async function api<T>(endpoint: string, body?: unknown): Promise<T> {
   const response = await fetch(endpoint, {
     credentials: "same-origin",
     method: "POST",
@@ -49,5 +44,5 @@ export class APIError extends Error {
 }
 
 export type Guild = Pick<Discord.Guild, "name" | "id"> & { channels: string[] };
-export type Channel = Pick<Discord.GuildChannel, "type" | "id">;
-export type Message = Pick<Discord.Message, never>;
+export type Channel = Pick<Discord.GuildChannel, "type" | "id" | "name">;
+export type Message = Pick<Discord.Message, "content" | "id">;

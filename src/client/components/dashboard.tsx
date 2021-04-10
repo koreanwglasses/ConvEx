@@ -7,11 +7,10 @@ import {
   useParams,
   useRouteMatch,
 } from "react-router-dom";
-import { asyncFilter, join } from "../../utils";
-import { api, Channel } from "../api";
-import to from "await-to-js";
+import { join } from "../../utils";
+import { api, Channel, Guild } from "../api";
 import { useAPI } from "../hooks/use-api";
-import { useAwait } from "../hooks/use-await";
+import { useAwaitAll } from "../hooks/use-await";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -54,15 +53,12 @@ const GuildSelector = () => {
 };
 
 const GuildDashboard = () => {
-  const { guildId } = useParams() as { guildId: string };
+  const { guildId } = useParams<{ guildId: string }>();
   const [guildErr, guild] = useAPI(api("/api/guild", { guildId }));
-  const channels = useAwait(
-    guild &&
-      Promise.all(
-        guild.channels.map((channelId) =>
-          api("/api/channel", { guildId, channelId })
-        )
-      ),
+  const channels = useAwaitAll(
+    guild?.channels.map((channelId) =>
+      api("/api/channel", { guildId, channelId })
+    ),
     undefined,
     [guild]
   );
@@ -78,7 +74,7 @@ const GuildDashboard = () => {
         <>
           <h3>{guild.name}</h3>
           {textChannels?.map((channel) => (
-            <ChannelView channel={channel} key={channel.id} />
+            <ChannelView guild={guild} channel={channel} key={channel.id} />
           ))}
         </>
       )}
@@ -86,6 +82,26 @@ const GuildDashboard = () => {
   );
 };
 
-const ChannelView = ({ channel }: { channel: Channel }) => {
-  return <div style={{ borderStyle: "solid" }}>{channel.id}</div>;
+const ChannelView = ({
+  guild,
+  channel,
+}: {
+  guild: Guild;
+  channel: Channel;
+}) => {
+  const [err, messages] = useAPI(
+    api("/api/message/list", { guildId: guild.id, channelId: channel.id })
+  );
+  return (
+    <div style={{ borderStyle: "solid" }}>
+      <h4>{channel.name}</h4>
+      {err ? (
+        <i>Error loading messages: {err.message}</i>
+      ) : !messages ? (
+        <i>Loading...</i>
+      ) : (
+        messages.map((message) => <div key={message.id}>{message.content}</div>)
+      )}
+    </div>
+  );
 };
