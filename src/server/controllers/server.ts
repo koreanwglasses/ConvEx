@@ -1,8 +1,10 @@
 import { createServer } from "http";
-import * as config from "../config";
+import * as config from "../../config";
 import app from "./app";
+import * as Sockets from "./sockets";
 
 const server = createServer(app);
+Sockets.init();
 
 export const start = () =>
   new Promise<void>((res) => {

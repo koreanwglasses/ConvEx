@@ -1,4 +1,4 @@
-import * as config from "./config";
+import * as config from "../config";
 import * as Discord from "./controllers/discord";
 import * as Server from "./controllers/server";
 

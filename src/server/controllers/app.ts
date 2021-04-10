@@ -4,7 +4,7 @@ import asyncHandler from "express-async-handler";
 import passport from "passport";
 import { resolve } from "path";
 import { asyncFilter } from "../../utils";
-import * as config from "../config";
+import * as config from "../../config";
 import * as Auth from "../middlewares/auth";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "./discord";

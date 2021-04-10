@@ -6,38 +6,42 @@ import * as SocketIO from "socket.io";
 import { sessionMiddleware } from "../middlewares/sessions";
 import httpServer from "./server";
 
-const io = new SocketIO.Server(httpServer);
+let io: SocketIO.Server;
 
-type Socket = SocketIO.Socket & {
-  request: { user: User; session: Session & { socketId: string } };
-};
+export const init = () => {
+  io = new SocketIO.Server(httpServer);
 
-// convert a connect middleware to a Socket.IO middleware
-const wrap = (middleware: RequestHandler) => (
-  socket: SocketIO.Socket,
-  next: NextFunction
-) => middleware(socket.request as Request, {} as Response, next);
+  type Socket = SocketIO.Socket & {
+    request: { user: User; session: Session & { socketId: string } };
+  };
 
-io.use(wrap(sessionMiddleware));
-io.use(wrap(passport.initialize()));
-io.use(wrap(passport.session()));
+  // convert a connect middleware to a Socket.IO middleware
+  const wrap = (middleware: RequestHandler) => (
+    socket: SocketIO.Socket,
+    next: NextFunction
+  ) => middleware(socket.request as Request, {} as Response, next);
 
-io.use((socket: Socket, next) => {
-  if (socket.request.user) {
-    next();
-  } else {
-    next(new Error("Unauthorized"));
-  }
-});
+  io.use(wrap(sessionMiddleware));
+  io.use(wrap(passport.initialize()));
+  io.use(wrap(passport.session()));
 
-io.on("connect", (socket: Socket) => {
-  console.log(`new connection ${socket.id}`);
-  socket.on("whoami", (cb) => {
-    cb(socket.request.user ? socket.request.user.username : "");
+  io.use((socket: Socket, next) => {
+    if (socket.request.user) {
+      next();
+    } else {
+      next(new Error("Unauthorized"));
+    }
   });
 
-  const session = socket.request.session;
-  console.log(`saving sid ${socket.id} in session ${session.id}`);
-  session.socketId = socket.id;
-  session.save();
-});
+  io.on("connect", (socket: Socket) => {
+    console.log(`new connection ${socket.id}`);
+    socket.on("whoami", (cb) => {
+      cb(socket.request.user ? socket.request.user.username : "");
+    });
+
+    const session = socket.request.session;
+    console.log(`saving sid ${socket.id} in session ${session.id}`);
+    session.socketId = socket.id;
+    session.save();
+  });
+};

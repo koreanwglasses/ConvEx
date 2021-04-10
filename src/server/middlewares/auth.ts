@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy } from "passport-discord";
-import * as config from "../config";
-import * as localConfig from "../config.local";
+import * as config from "../../config";
+import * as localConfig from "../../config.local";
 
 export const init = () => {
   passport.serializeUser((user, done) => done(null, user));

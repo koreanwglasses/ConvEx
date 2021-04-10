@@ -1,5 +1,5 @@
 import { Client } from "discord.js";
-import * as localConfig from "../config.local";
+import * as localConfig from "../../config.local";
 
 const client = new Client();
 
