@@ -5,9 +5,6 @@ import * as Server from "./controllers/server";
 (async () => {
   console.log(`Server running in ${config.mode} mode`);
 
-  console.log("Initializing...");
-  Server.init();
-
   console.log("Logging into Discord...");
   await Discord.start();
 

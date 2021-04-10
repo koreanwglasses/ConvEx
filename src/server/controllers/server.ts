@@ -1,17 +1,13 @@
-import { createServer, Server } from "http";
+import { createServer } from "http";
 import * as config from "../config";
-import * as App from "./app";
-import * as Sockets from "./sockets";
+import app from "./app";
 
-let server: Server;
+const server = createServer(app);
+
 export const start = () =>
   new Promise<void>((res) => {
     server.listen(config.port);
     server.once("listening", res);
   });
 
-export const init = () => {
-  const app = App.init();
-  server = createServer(app);
-  Sockets.init({ httpServer: server });
-};
+export default server;
