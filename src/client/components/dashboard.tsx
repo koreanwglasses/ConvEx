@@ -100,7 +100,11 @@ const ChannelView = ({
       ) : !messages ? (
         <i>Loading...</i>
       ) : (
-        messages.map((message) => <div key={message.id}>{message.content}</div>)
+        messages.map((message) => (
+          <div key={message.id} style={{ borderStyle: "solid" }}>
+            {message.content}
+          </div>
+        ))
       )}
     </div>
   );

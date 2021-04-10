@@ -1,9 +1,9 @@
-import * as App from "./app";
+import * as Server from "./server";
 import * as Discord from "./discord";
 
 (async () => {
   await Discord.start();
-  App.start();
+  Server.start();
 
   console.log("Server started!");
 })();

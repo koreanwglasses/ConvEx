@@ -1,6 +1,5 @@
 import express from "express";
 import { resolve } from "path";
-import { createServer } from "http";
 import passport from "passport";
 import { Strategy } from "passport-discord";
 import * as localConfig from "./config.local";
@@ -12,7 +11,7 @@ import { User } from "discord.js";
 import { asyncFilter } from "../utils";
 import asyncHandler from "express-async-handler";
 
-const app = express();
+export const app = express();
 
 app.use(express.json());
 
@@ -163,7 +162,3 @@ app.get("*", (req, res) => {
     resolve(config.mode === "development" ? "dist" : "build", "index.html")
   );
 });
-
-export const http = createServer(app);
-
-export const start = () => http.listen(config.port);
