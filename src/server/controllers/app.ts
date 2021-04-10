@@ -120,6 +120,9 @@ app.post(
 
 app.use("/static", express.static(resolve("static")));
 
+// Prevents socket.io endpoint from being captured by the * below
+app.use("/socket.io", (req, res, next) => next());
+
 // Used for loading scripts with index.html
 app.use(
   express.static(resolve(config.mode === "development" ? "dist" : "build"))
