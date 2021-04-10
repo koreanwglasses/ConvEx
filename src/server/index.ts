@@ -3,8 +3,6 @@ import * as App from "./controllers/app";
 import * as Discord from "./controllers/discord";
 import * as Server from "./controllers/server";
 import * as Sockets from "./controllers/sockets";
-import * as Auth from "./middlewares/auth";
-import * as Sessions from "./middlewares/sessions";
 
 (async () => {
   console.log(`Server running in ${config.mode} mode`);
