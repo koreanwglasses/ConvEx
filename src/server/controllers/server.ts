@@ -1,5 +1,7 @@
 import { createServer, Server } from "http";
 import * as config from "../config";
+import * as App from "./app";
+import * as Sockets from "./sockets";
 
 let server: Server;
 export const start = () =>
@@ -8,7 +10,8 @@ export const start = () =>
     server.once("listening", res);
   });
 
-export const init = ({ app }: { app: Express.Application }) => {
+export const init = () => {
+  const app = App.init();
   server = createServer(app);
-  return server;
+  Sockets.init({ httpServer: server });
 };
