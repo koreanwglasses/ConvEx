@@ -1,5 +1,4 @@
 import * as React from "react";
-import { Layout } from "./layout";
 import {
   Link,
   Route,
@@ -11,6 +10,7 @@ import { join } from "../../utils";
 import { api, Channel, Guild } from "../api";
 import { useAPI } from "../hooks/use-api";
 import { useAwaitAll } from "../hooks/use-await";
+import { Layout } from "./layout";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();

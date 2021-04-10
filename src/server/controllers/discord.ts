@@ -1,7 +1,10 @@
 import { Client } from "discord.js";
 import * as localConfig from "../config.local";
 
-const client = new Client();
+let client: Client;
+export const init = () => {
+  client = new Client();
+};
 
 export const start = () =>
   new Promise<void>((res) => {

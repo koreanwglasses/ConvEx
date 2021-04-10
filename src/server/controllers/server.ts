@@ -1,7 +1,14 @@
-import { createServer } from "http";
+import { createServer, Server } from "http";
 import * as config from "../config";
-import { app } from "./app";
 
-export const server = createServer(app);
+let server: Server;
+export const start = () =>
+  new Promise<void>((res) => {
+    server.listen(config.port);
+    server.once("listening", res);
+  });
 
-export const start = () => server.listen(config.port);
+export const init = ({ app }: { app: Express.Application }) => {
+  server = createServer(app);
+  return { server };
+};
