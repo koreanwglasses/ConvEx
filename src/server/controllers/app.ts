@@ -2,13 +2,13 @@ import express from "express";
 import { resolve } from "path";
 import passport from "passport";
 import { Strategy } from "passport-discord";
-import * as localConfig from "./config.local";
-import * as config from "./config";
+import * as localConfig from "../config.local";
+import * as config from "../config";
 import * as Discord from "./discord";
 import createMemoryStore from "memorystore";
 import session from "express-session";
 import { User } from "discord.js";
-import { asyncFilter } from "../utils";
+import { asyncFilter } from "../../utils";
 import asyncHandler from "express-async-handler";
 
 export const app = express();

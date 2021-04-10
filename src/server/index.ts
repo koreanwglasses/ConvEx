@@ -1,5 +1,5 @@
-import * as Server from "./server";
-import * as Discord from "./discord";
+import * as Server from "./controllers/server";
+import * as Discord from "./controllers/discord";
 
 (async () => {
   await Discord.start();
