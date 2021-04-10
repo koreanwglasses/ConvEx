@@ -9,10 +9,6 @@ import * as Sessions from "./middlewares/sessions";
 (async () => {
   console.log(`Server running in ${config.mode} mode`);
   console.log("Initializing...");
-  Discord.init();
-
-  Sessions.init();
-  Auth.init();
 
   const app = App.init();
   const httpServer = Server.init({ app });
