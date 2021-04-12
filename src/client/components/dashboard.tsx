@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEffect } from "react";
 import {
   Link,
   Route,
@@ -10,6 +11,7 @@ import { join } from "../../utils";
 import { api, Channel, Guild } from "../api";
 import { useAPI } from "../hooks/use-api";
 import { useAwaitAll } from "../hooks/use-await";
+import * as Sockets from "../sockets";
 import { Layout } from "./layout";
 
 export const Dashboard = () => {
@@ -64,6 +66,10 @@ const GuildDashboard = () => {
   );
   const textChannels = channels?.filter((channel) => channel.type === "text");
 
+  useEffect(() => {
+    Sockets.connect();
+  }, []);
+
   return (
     <>
       {guildErr ? (
@@ -92,6 +98,13 @@ const ChannelView = ({
   const [err, messages] = useAPI(
     api("/api/message/list", { guildId: guild.id, channelId: channel.id })
   );
+
+  useEffect(() => {
+    Sockets.listenForMessages(guild.id, channel.id, (message) =>
+      console.log(message)
+    );
+  }, []);
+
   return (
     <div style={{ borderStyle: "solid" }}>
       <h4>{channel.name}</h4>

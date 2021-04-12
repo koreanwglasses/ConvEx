@@ -4,6 +4,7 @@ import { Session } from "express-session";
 import passport from "passport";
 import * as SocketIO from "socket.io";
 import { sessionMiddleware } from "../middlewares/sessions";
+import * as Discord from "./discord";
 import httpServer from "./server";
 
 let io: SocketIO.Server;
@@ -34,13 +35,21 @@ export const init = () => {
   });
 
   io.on("connect", (socket: Socket) => {
-    console.log(`new connection ${socket.id}`);
-    socket.on("whoami", (cb) => {
-      cb(socket.request.user ? socket.request.user.username : "");
-    });
+    socket.on(
+      "listen-for-messages",
+      ({ guildId, channelId }: { guildId: string; channelId: string }) => {
+        Discord.hasPermission({
+          userId: socket.request.user.id,
+          guildId,
+          permission: "canView",
+        });
+        Discord.listenForMessages(guildId, channelId, (message) => {
+          socket.emit("message", message);
+        });
+      }
+    );
 
     const session = socket.request.session;
-    console.log(`saving sid ${socket.id} in session ${session.id}`);
     session.socketId = socket.id;
     session.save();
   });

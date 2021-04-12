@@ -48,7 +48,11 @@ app.post(
 
     const user = req.user as User;
     const guilds = await asyncFilter(Discord.listGuilds(), (guild) =>
-      Discord.hasPermission(user.id, guild.id, "canView")
+      Discord.hasPermission({
+        userId: user.id,
+        guildId: guild.id,
+        permission: "canView",
+      })
     );
     return res.send(guilds);
   })
@@ -63,7 +67,13 @@ app.post(
 
     const user = req.user as User;
 
-    if (!(await Discord.hasPermission(user.id, guildId, "canView")))
+    if (
+      !(await Discord.hasPermission({
+        userId: user.id,
+        guildId,
+        permission: "canView",
+      }))
+    )
       return res.sendStatus(401);
 
     const guild = await Discord.fetchGuild(guildId);
@@ -80,7 +90,13 @@ app.post(
 
     const user = req.user as User;
 
-    if (!(await Discord.hasPermission(user.id, guildId, "canView")))
+    if (
+      !(await Discord.hasPermission({
+        userId: user.id,
+        guildId,
+        permission: "canView",
+      }))
+    )
       return res.sendStatus(401);
 
     const guild = await Discord.fetchGuild(guildId);
@@ -99,7 +115,13 @@ app.post(
 
     const user = req.user as User;
 
-    if (!(await Discord.hasPermission(user.id, guildId, "canView")))
+    if (
+      !(await Discord.hasPermission({
+        userId: user.id,
+        guildId,
+        permission: "canView",
+      }))
+    )
       return res.sendStatus(401);
 
     const guild = await Discord.fetchGuild(guildId);
