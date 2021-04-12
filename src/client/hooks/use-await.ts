@@ -1,4 +1,6 @@
-import React, { useEffect, useState } from "react";
+import to from "await-to-js";
+import React, { useState } from "react";
+import { useAsyncEffect } from "./use-async-effect";
 
 export const useAwait = <T = unknown>(
   promise: Promise<T>,
@@ -6,9 +8,7 @@ export const useAwait = <T = unknown>(
   deps?: React.DependencyList
 ) => {
   const [result, setResult] = useState(initial);
-  useEffect(() => {
-    (async () => setResult(await promise))();
-  }, deps);
+  useAsyncEffect(async () => setResult(await promise), deps);
   return result;
 };
 
@@ -18,8 +18,12 @@ export const useAwaitAll = <T = unknown>(
   deps?: React.DependencyList
 ) => {
   const [result, setResult] = useState(initial);
-  useEffect(() => {
-    if (promises) Promise.all(promises).then(setResult);
-  }, deps);
+  useAsyncEffect(
+    async () => promises && setResult(await Promise.all(promises)),
+    deps
+  );
   return result;
 };
+
+export const useAwaitTo = <T>(promise: Promise<T>) =>
+  useAwait(to(promise), [null, undefined], []);

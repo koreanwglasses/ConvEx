@@ -13,8 +13,7 @@ socket.onAny((event, ...args) => {
 
 export const connect = () => socket.connect();
 export const listenForMessages = (
-  guildId: string,
-  channelId: string,
+  { guildId, channelId }: { guildId: string; channelId: string },
   callback: (message: Message) => void
 ) => {
   socket.emit("listen-for-messages", { guildId, channelId });

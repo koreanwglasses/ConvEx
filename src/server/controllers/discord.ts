@@ -13,14 +13,16 @@ export const start = () =>
 // Permissions //
 /////////////////
 
-type Permission = "canView";
+export type Permission = "canView";
 
 export const getPermissions = async ({
   userId,
   guildId,
+  channelId,
 }: {
-  userId: string;
-  guildId: string;
+  userId?: string;
+  guildId?: string;
+  channelId?: string;
 }): Promise<Record<Permission, boolean>> => {
   // TODO: Have stricter restrictions on who can access Concord
   // Right now, anyone in a guild can access Concord for that guild
@@ -31,15 +33,18 @@ export const getPermissions = async ({
   };
 };
 
-export const hasPermission = async ({
-  userId,
-  guildId,
-  permission,
-}: {
-  userId: string;
-  guildId: string;
-  permission: Permission;
-}) => (await getPermissions({ userId, guildId }))[permission];
+export const hasPermission = async (
+  {
+    userId,
+    guildId,
+    channelId,
+  }: {
+    userId?: string;
+    guildId?: string;
+    channelId?: string;
+  },
+  permission: Permission
+) => (await getPermissions({ userId, guildId, channelId }))[permission];
 
 ////////////
 // Guilds //

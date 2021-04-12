@@ -37,12 +37,25 @@ export const init = () => {
   io.on("connect", (socket: Socket) => {
     socket.on(
       "listen-for-messages",
-      ({ guildId, channelId }: { guildId: string; channelId: string }) => {
-        Discord.hasPermission({
-          userId: socket.request.user.id,
-          guildId,
-          permission: "canView",
-        });
+      async ({
+        guildId,
+        channelId,
+      }: {
+        guildId: string;
+        channelId: string;
+      }) => {
+        if (
+          !(await Discord.hasPermission(
+            {
+              userId: socket.request.user.id,
+              guildId,
+            },
+            "canView"
+          ))
+        ) {
+          return socket.emit("error", "Forbidden");
+        }
+
         Discord.listenForMessages(guildId, channelId, (message) => {
           socket.emit("message", message);
         });

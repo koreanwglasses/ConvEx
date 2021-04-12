@@ -41,18 +41,43 @@ app.get(
 // Discord //
 /////////////
 
+const requirePermission = (permission: Discord.Permission) =>
+  asyncHandler(async (req, res, next) => {
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+
+    const { guildId, channelId } = req.body;
+    const { id: userId } = req.user as User;
+
+    if (
+      !(await Discord.hasPermission(
+        {
+          userId,
+          guildId,
+          channelId,
+        },
+        permission
+      ))
+    ) {
+      return res.sendStatus(403);
+    }
+
+    next();
+  });
+
 app.post(
   "/api/guild/list",
   asyncHandler(async (req, res) => {
     if (req.isUnauthenticated()) return res.sendStatus(401);
 
-    const user = req.user as User;
-    const guilds = await asyncFilter(Discord.listGuilds(), (guild) =>
-      Discord.hasPermission({
-        userId: user.id,
-        guildId: guild.id,
-        permission: "canView",
-      })
+    const { id: userId } = req.user as User;
+    const guilds = await asyncFilter(Discord.listGuilds(), ({ id: guildId }) =>
+      Discord.hasPermission(
+        {
+          userId,
+          guildId,
+        },
+        "canView"
+      )
     );
     return res.send(guilds);
   })
@@ -60,22 +85,9 @@ app.post(
 
 app.post(
   "/api/guild",
+  requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId } = req.body;
-
-    if (req.isUnauthenticated()) return res.sendStatus(401);
-
-    const user = req.user as User;
-
-    if (
-      !(await Discord.hasPermission({
-        userId: user.id,
-        guildId,
-        permission: "canView",
-      }))
-    )
-      return res.sendStatus(401);
-
     const guild = await Discord.fetchGuild(guildId);
     return res.send(guild);
   })
@@ -83,21 +95,9 @@ app.post(
 
 app.post(
   "/api/channel",
+  requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId, channelId } = req.body;
-
-    if (req.isUnauthenticated()) return res.sendStatus(401);
-
-    const user = req.user as User;
-
-    if (
-      !(await Discord.hasPermission({
-        userId: user.id,
-        guildId,
-        permission: "canView",
-      }))
-    )
-      return res.sendStatus(401);
 
     const guild = await Discord.fetchGuild(guildId);
     const channel = guild.channels.resolve(channelId);
@@ -108,21 +108,9 @@ app.post(
 
 app.post(
   "/api/message/list",
+  requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId, channelId, limit = 100 } = req.body;
-
-    if (req.isUnauthenticated()) return res.sendStatus(401);
-
-    const user = req.user as User;
-
-    if (
-      !(await Discord.hasPermission({
-        userId: user.id,
-        guildId,
-        permission: "canView",
-      }))
-    )
-      return res.sendStatus(401);
 
     const guild = await Discord.fetchGuild(guildId);
     const channel = guild.channels.resolve(channelId);

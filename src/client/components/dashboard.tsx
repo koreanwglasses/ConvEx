@@ -9,8 +9,8 @@ import {
 } from "react-router-dom";
 import { join } from "../../utils";
 import { api, Channel, Guild } from "../api";
-import { useAPI } from "../hooks/use-api";
-import { useAwaitAll } from "../hooks/use-await";
+import { useAwaitAll, useAwaitTo } from "../hooks/use-await";
+import { useMessages } from "../hooks/use-messages";
 import * as Sockets from "../sockets";
 import { Layout } from "./layout";
 
@@ -32,7 +32,7 @@ export const Dashboard = () => {
 };
 
 const GuildSelector = () => {
-  const [err, guilds] = useAPI(api("/api/guild/list"));
+  const [err, guilds] = useAwaitTo(api("/api/guild/list"));
   const { url } = useRouteMatch();
   return (
     <>
@@ -56,7 +56,7 @@ const GuildSelector = () => {
 
 const GuildDashboard = () => {
   const { guildId } = useParams<{ guildId: string }>();
-  const [guildErr, guild] = useAPI(api("/api/guild", { guildId }));
+  const [guildErr, guild] = useAwaitTo(api("/api/guild", { guildId }));
   const channels = useAwaitAll(
     guild?.channels.map((channelId) =>
       api("/api/channel", { guildId, channelId })
@@ -95,15 +95,10 @@ const ChannelView = ({
   guild: Guild;
   channel: Channel;
 }) => {
-  const [err, messages] = useAPI(
-    api("/api/message/list", { guildId: guild.id, channelId: channel.id })
-  );
-
-  useEffect(() => {
-    Sockets.listenForMessages(guild.id, channel.id, (message) =>
-      console.log(message)
-    );
-  }, []);
+  const [err, messages] = useMessages({
+    guildId: guild.id,
+    channelId: channel.id,
+  });
 
   return (
     <div style={{ borderStyle: "solid" }}>
