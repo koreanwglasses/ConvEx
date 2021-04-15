@@ -7,6 +7,7 @@ import * as config from "../../config";
 import { asyncFilter } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "./discord";
+import * as Perspective from "./perspective";
 
 const app = express();
 
@@ -121,6 +122,36 @@ app.post(
     const messages = await channel.messages.fetch({ limit });
 
     return res.send(messages);
+  })
+);
+
+/////////////////////
+// Perspective API //
+/////////////////////
+
+app.post(
+  "/api/analyze",
+  requirePermission("canView"),
+  asyncHandler(async (req, res) => {
+    const { guildId, channelId, messageIds } = req.body as {
+      guildId: string;
+      channelId: string;
+      messageIds: string[];
+    };
+
+    const guild = await Discord.fetchGuild(guildId);
+    const channel = guild.channels.resolve(channelId);
+
+    if (!channel.isText())
+      return res.status(500).send("Channel is not a text channel");
+
+    const analyses = await Promise.all(
+      messageIds
+        .map((messageId) => channel.messages.fetch(messageId))
+        .map(async (message) => await Perspective.analyzeMessage(await message))
+    );
+
+    return res.send(analyses);
   })
 );
 

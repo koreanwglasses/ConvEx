@@ -2,10 +2,11 @@
   "main": "src/index.tsx",
   "scripts": {
     "format": "prettier --write \"./**/*.{ts,tsx,js,jsx,json}\"",
+    "dev:precompile": "tcm src/client -w",
     "build:client": "cross-env NODE_ENV=production webpack --config webpack.prod.js",
     "dev:client": "cross-env NODE_ENV=development webpack --watch --config webpack.dev.js",
     "dev:server": "cross-env NODE_ENV=development nodemon",
-    "dev": "npm-run-all --parallel dev:client dev:server"
+    "dev": "npm-run-all --parallel dev:precompile dev:client dev:server"
   },
   "dependencies": {
     "@types/express": "^4.17.11",
@@ -41,6 +42,7 @@
     "npm-run-all": "^4.1.5",
     "passport": "^0.4.1",
     "passport-discord": "^0.1.4",
+    "perspective-api-client": "https://github.com/koreanwglasses/perspective-api-client.git",
     "prettier": "2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "react": "^17.0.1",
@@ -52,7 +54,6 @@
     "style-loader": "^2.0.0",
     "ts-loader": "^8.0.17",
     "typescript": "^4.2.2",
-    "typescript-plugin-css-modules": "^3.2.0",
     "webpack": "^5.24.2",
     "webpack-cli": "^4.5.0",
     "webpack-dev-server": "^3.11.2",

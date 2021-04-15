@@ -13,6 +13,7 @@ import { useAwaitAll, useAwaitTo } from "../hooks/use-await";
 import { useMessages } from "../hooks/use-messages";
 import * as Sockets from "../sockets";
 import { Layout } from "./layout";
+import styles from "./dashboard.module.css";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -101,7 +102,7 @@ const ChannelView = ({
   });
 
   return (
-    <div style={{ borderStyle: "solid" }}>
+    <div className={styles.channelView}>
       <h4>{channel.name}</h4>
       {err ? (
         <i>Error loading messages: {err.message}</i>
