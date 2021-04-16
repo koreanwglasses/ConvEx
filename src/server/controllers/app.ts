@@ -72,6 +72,15 @@ app.post(routes.apiCurrentUser, (req, res) => {
 });
 
 app.post(
+  routes.apiUser,
+  asyncHandler(async (req, res) => {
+    const { userId } = req.body;
+    const user = await Discord.fetchUser(userId);
+    return res.send(user);
+  })
+);
+
+app.post(
   routes.apiListGuilds,
   asyncHandler(async (req, res) => {
     const { id: userId } = req.user as User;

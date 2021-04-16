@@ -46,6 +46,12 @@ export const hasPermission = async (
   permission: Permission
 ) => (await getPermissions({ userId, guildId, channelId }))[permission];
 
+//////////
+// User //
+//////////
+
+export const fetchUser = (userId: string) => client.users.fetch(userId);
+
 ////////////
 // Guilds //
 ////////////

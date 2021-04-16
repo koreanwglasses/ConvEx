@@ -7,7 +7,7 @@ import {
   useParams,
   useRouteMatch,
 } from "react-router-dom";
-import { Channel, Guild, routes } from "../../endpoints";
+import { Channel, Guild, Message, routes } from "../../endpoints";
 import { join } from "../../utils";
 import { api } from "../api";
 import { useAPI } from "../hooks/use-api";
@@ -107,18 +107,41 @@ const ChannelView = ({
 
   return (
     <div className={styles.channelView}>
-      <h4>{channel.name}</h4>
+      <h4>#{channel.name}</h4>
       {err ? (
         <i>Error loading messages: {err.message}</i>
       ) : !messages ? (
         <i>Loading...</i>
       ) : (
         messages.map((message) => (
-          <div key={message.id} className={styles.message}>
-            {message.content}
-          </div>
+          <MessageView key={message.id} message={message} />
         ))
       )}
+    </div>
+  );
+};
+
+const MessageView = ({ message }: { message: Message }) => {
+  const [err, user] = useAPI(routes.apiUser, { userId: message.authorID });
+
+  const time = new Intl.DateTimeFormat("default", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+  }).format(new Date(message.createdTimestamp));
+
+  return (
+    <div className={styles.message}>
+      <img src={user?.avatarURL} className={styles.messageProfile} />
+      <div>
+        <div>
+          <span className={styles.messageUsername}>{user?.username}</span>
+          <span className={styles.messageTime}>{time}</span>
+        </div>
+        <div>{message.content}</div>
+      </div>
     </div>
   );
 };
