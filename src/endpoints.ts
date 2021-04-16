@@ -3,6 +3,7 @@ import * as Perspective from "perspective-api-client";
 
 const apiRoutes = {
   // Discord
+  apiCurrentUser: "/api/user/current",
   apiListGuilds: "/api/guild/list",
   apiFetchGuild: "/api/guild",
   apiFetchChannel: "/api/channel",
@@ -22,7 +23,8 @@ export type APIRoutes = typeof apiRoutes;
 
 export type RequestBody = {
   // Discord
-  [routes.apiListGuilds]: null;
+  [routes.apiCurrentUser]: undefined;
+  [routes.apiListGuilds]: undefined;
   [routes.apiFetchGuild]: { guildId: string };
   [routes.apiFetchChannel]: { guildId: string; channelId: string };
   [routes.apiListMessages]: { guildId: string; channelId: string };
@@ -37,6 +39,7 @@ export type RequestBody = {
 
 export type ResponseBody = {
   // Discord
+  [routes.apiCurrentUser]: User;
   [routes.apiListGuilds]: Guild[];
   [routes.apiFetchGuild]: Guild;
   [routes.apiFetchChannel]: Channel;
@@ -46,6 +49,7 @@ export type ResponseBody = {
   [routes.apiAnalyze]: Perspective.Result;
 };
 
+export type User = Pick<Discord.User, "username" | "discriminator">;
 export type Guild = Pick<Discord.Guild, "name" | "id"> & { channels: string[] };
 export type Channel = Pick<Discord.GuildChannel, "type" | "id" | "name">;
 export type Message = Pick<Discord.Message, "content" | "id">;

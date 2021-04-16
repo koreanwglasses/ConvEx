@@ -66,11 +66,14 @@ const requirePermission = (permission: Discord.Permission) =>
     next();
   });
 
+app.post(routes.apiCurrentUser, (req, res) => {
+  if (req.isUnauthenticated()) return res.sendStatus(401);
+  res.send(req.user);
+});
+
 app.post(
   routes.apiListGuilds,
   asyncHandler(async (req, res) => {
-    if (req.isUnauthenticated()) return res.sendStatus(401);
-
     const { id: userId } = req.user as User;
     const guilds = await asyncFilter(Discord.listGuilds(), ({ id: guildId }) =>
       Discord.hasPermission(
