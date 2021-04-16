@@ -12,22 +12,24 @@ import { api, Channel, Guild } from "../api";
 import { useAwaitAll, useAwaitTo } from "../hooks/use-await";
 import { useMessages } from "../hooks/use-messages";
 import * as Sockets from "../sockets";
+import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
-import styles from "./dashboard.module.css";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
   return (
     <Layout>
-      <h2>Dashboard</h2>
-      <Switch>
-        <Route exact path={path}>
-          <GuildSelector />
-        </Route>
-        <Route path={`${path}/:guildId`}>
-          <GuildDashboard />
-        </Route>
-      </Switch>
+      <div className={styles.dashboard}>
+        <h2>Dashboard</h2>
+        <Switch>
+          <Route exact path={path}>
+            <GuildSelector />
+          </Route>
+          <Route path={`${path}/:guildId`}>
+            <GuildDashboard />
+          </Route>
+        </Switch>
+      </div>
     </Layout>
   );
 };
@@ -36,7 +38,7 @@ const GuildSelector = () => {
   const [err, guilds] = useAwaitTo(api("/api/guild/list"));
   const { url } = useRouteMatch();
   return (
-    <>
+    <div className={styles.guildSelector}>
       <h3>Your Guilds</h3>
       {err ? (
         <i>Error fetching guilds: {err.message}</i>
@@ -51,7 +53,7 @@ const GuildSelector = () => {
           </Link>
         ))
       )}
-    </>
+    </div>
   );
 };
 
@@ -72,7 +74,7 @@ const GuildDashboard = () => {
   }, []);
 
   return (
-    <>
+    <div className={styles.guildDashboard}>
       {guildErr ? (
         <i>Error fetching guild : {guildErr.message}</i>
       ) : !guild ? (
@@ -85,7 +87,7 @@ const GuildDashboard = () => {
           ))}
         </>
       )}
-    </>
+    </div>
   );
 };
 
@@ -110,7 +112,7 @@ const ChannelView = ({
         <i>Loading...</i>
       ) : (
         messages.map((message) => (
-          <div key={message.id} style={{ borderStyle: "solid" }}>
+          <div key={message.id} className={styles.message}>
             {message.content}
           </div>
         ))
