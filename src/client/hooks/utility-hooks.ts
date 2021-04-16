@@ -11,27 +11,41 @@ export const useAsyncEffect = (
 };
 
 export const useAwait = <T = unknown>(
-  promise: Promise<T>,
-  initial?: T,
-  deps?: React.DependencyList
+  callback: () => Promise<T>,
+  deps?: React.DependencyList,
+  initial?: T
 ) => {
   const [result, setResult] = useState(initial);
-  useAsyncEffect(async () => setResult(await promise), deps);
+  useAsyncEffect(async () => {
+    const promise = callback();
+    if (promise) setResult(await promise);
+  }, deps);
   return result;
 };
 
 export const useAwaitAll = <T = unknown>(
-  promises: Promise<T>[],
-  initial?: T[],
-  deps?: React.DependencyList
+  callback: () => Promise<T>[],
+  deps?: React.DependencyList,
+  initial?: T[]
 ) => {
   const [result, setResult] = useState(initial);
-  useAsyncEffect(
-    async () => promises && setResult(await Promise.all(promises)),
-    deps
-  );
+  useAsyncEffect(async () => {
+    const promises = callback();
+    if (promises) setResult(await Promise.all(promises));
+  }, deps);
   return result;
 };
 
-export const useAwaitTo = <T>(promise: Promise<T>) =>
-  useAwait(to(promise), [null, undefined], []);
+export const useAwaitTo = <T>(
+  callback: () => Promise<T>,
+  deps?: React.DependencyList,
+  initial?: T
+) =>
+  useAwait(
+    () => {
+      const promise = callback();
+      if (promise) return to(promise);
+    },
+    deps,
+    [null, initial]
+  );

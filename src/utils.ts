@@ -19,3 +19,6 @@ export const rootURL = () =>
   `${config.baseURL}${+config.port === 80 ? "" : `:${config.port}`}`;
 
 export type ValueOf<T> = T[keyof T];
+
+export const zip = <S, T>(arr1: S[], arr2: T[]) =>
+  arr1.map((value, i) => [value, arr2[i]] as const);

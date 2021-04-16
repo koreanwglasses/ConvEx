@@ -1,3 +1,4 @@
+import to from "await-to-js";
 import { User } from "discord.js";
 import express from "express";
 import asyncHandler from "express-async-handler";
@@ -158,12 +159,19 @@ app.post(
     if (!channel.isText())
       return res.status(500).send("Channel is not a text channel");
 
-    const analyses = await Promise.all(
-      messageIds
-        .map((messageId) => channel.messages.fetch(messageId))
-        .map(async (message) => await Perspective.analyzeMessage(await message))
-    );
-
+    const analyses = (
+      await Promise.all(
+        messageIds
+          .map((messageId) => channel.messages.fetch(messageId))
+          .map(
+            async (message) =>
+              await to(Perspective.analyzeMessage(await message))
+          )
+      )
+    ).map(([error, result]) => ({
+      error: error && { name: error.name, message: error.message },
+      result,
+    }));
     return res.send(analyses);
   })
 );

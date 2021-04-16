@@ -35,7 +35,7 @@ export type RequestBody = {
   [routes.apiAnalyze]: {
     guildId: string;
     channelId: string;
-    messageId: string;
+    messageIds: string[];
   };
 };
 
@@ -49,7 +49,7 @@ export type ResponseBody = {
   [routes.apiListMessages]: Message[];
 
   // Analysis
-  [routes.apiAnalyze]: Perspective.Result;
+  [routes.apiAnalyze]: { error: Error; result: Perspective.Result }[];
 };
 
 export type User = Pick<Discord.User, "username" | "discriminator"> & {

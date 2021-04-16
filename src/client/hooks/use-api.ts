@@ -7,4 +7,4 @@ export const useAPI = <R extends ValueOf<APIRoutes>>(
   endpoint: R,
   body?: RequestBody[R]
 ): [null, ResponseBody[R]] | [Error, undefined] =>
-  useAwaitTo(api(endpoint, body));
+  useAwaitTo(() => api(endpoint, body), [endpoint, JSON.stringify(body)]);

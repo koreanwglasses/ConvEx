@@ -1,3 +1,4 @@
+import * as Perspective from "perspective-api-client";
 import * as React from "react";
 import { useEffect } from "react";
 import {
@@ -8,8 +9,9 @@ import {
   useRouteMatch,
 } from "react-router-dom";
 import { Channel, Guild, Message, routes } from "../../endpoints";
-import { join } from "../../utils";
+import { join, zip } from "../../utils";
 import { api } from "../api";
+import { useAnalyses } from "../hooks/use-analyses";
 import { useAPI } from "../hooks/use-api";
 import { useMessages } from "../hooks/use-messages";
 import { useAwaitAll } from "../hooks/utility-hooks";
@@ -42,19 +44,15 @@ const GuildSelector = () => {
   return (
     <div className={styles.guildSelector}>
       <h3>Your Guilds</h3>
-      {err ? (
-        <i>Error fetching guilds: {err.message}</i>
-      ) : !guilds ? (
-        <i>Loading...</i>
-      ) : !guilds.length ? (
-        <i>No applicable guilds found</i>
-      ) : (
+      {err && <i>Error fetching guilds: {err.message}</i>}
+      {!err && !guilds && <i>Loading...</i>}
+      {guilds && !guilds.length && <i>No applicable guilds found</i>}
+      {guilds?.length &&
         guilds.map((guild) => (
           <Link to={join(url, guild.id)} key={guild.id}>
             {guild.name}
           </Link>
-        ))
-      )}
+        ))}
     </div>
   );
 };
@@ -63,10 +61,10 @@ const GuildDashboard = () => {
   const { guildId } = useParams<{ guildId: string }>();
   const [guildErr, guild] = useAPI(routes.apiFetchGuild, { guildId });
   const channels = useAwaitAll(
-    guild?.channels.map((channelId) =>
-      api("/api/channel", { guildId, channelId })
-    ),
-    undefined,
+    () =>
+      guild?.channels.map((channelId) =>
+        api("/api/channel", { guildId, channelId })
+      ),
     [guild]
   );
   const textChannels = channels?.filter((channel) => channel.type === "text");
@@ -77,11 +75,9 @@ const GuildDashboard = () => {
 
   return (
     <div className={styles.guildDashboard}>
-      {guildErr ? (
-        <i>Error fetching guild : {guildErr.message}</i>
-      ) : !guild ? (
-        <i>Loading...</i>
-      ) : (
+      {guildErr && <i>Error fetching guild : {guildErr.message}</i>}
+      {!guildErr && !guild && <i>Loading...</i>}
+      {guild && (
         <>
           <h3>{guild.name}</h3>
           {textChannels?.map((channel) => (
@@ -104,24 +100,30 @@ const ChannelView = ({
     guildId: guild.id,
     channelId: channel.id,
   });
+  const [err2, analyses] = useAnalyses(guild.id, channel.id, messages);
 
   return (
     <div className={styles.channelView}>
       <h4>#{channel.name}</h4>
-      {err ? (
-        <i>Error loading messages: {err.message}</i>
-      ) : !messages ? (
-        <i>Loading...</i>
-      ) : (
-        messages.map((message) => (
-          <MessageView key={message.id} message={message} />
-        ))
-      )}
+      {err && <i>Error loading messages: {err.message}</i>}
+      {err2 && <i>Error loading analyses: {err2.message}</i>}
+      {!(err || err2) && !(messages && analyses) && <i>Loading...</i>}
+      {messages &&
+        analyses &&
+        zip(messages, analyses).map(([message, analysis]) => (
+          <MessageView key={message.id} message={message} analysis={analysis} />
+        ))}
     </div>
   );
 };
 
-const MessageView = ({ message }: { message: Message }) => {
+const MessageView = ({
+  message,
+  analysis,
+}: {
+  message: Message;
+  analysis: { error: Error; result: Perspective.Result };
+}) => {
   const [err, user] = useAPI(routes.apiUser, { userId: message.authorID });
 
   const time = new Intl.DateTimeFormat("default", {
@@ -142,6 +144,7 @@ const MessageView = ({ message }: { message: Message }) => {
         </div>
         <div>{message.content}</div>
       </div>
+      <div>{analysis?.result?.attributeScores.TOXICITY.summaryScore.value}</div>
     </div>
   );
 };
