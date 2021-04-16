@@ -5,8 +5,10 @@ import "./layout.scss";
 export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
   <div>
     <div className={styles.header}>
-      <h1>Concord</h1>
+      <h1>
+        <b>Con</b>cord
+      </h1>
     </div>
-    {children}
+    <div className={styles.content}>{children}</div>
   </div>
 );

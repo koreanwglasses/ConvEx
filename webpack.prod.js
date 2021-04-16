@@ -14,7 +14,19 @@ module.exports = merge(common, {
     rules: [
       {
         test: /\.s[ac]ss$/,
-        use: [MiniCssExtractPlugin.loader, "css-loader", "sass-loader"],
+        use: [
+          MiniCssExtractPlugin.loader,
+          {
+            loader: "css-loader",
+            options: {
+              modules: {
+                localIdentName: "[local]_[hash:base64:5]",
+                exportLocalsConvention: "camelCase"
+              },
+            },
+          },
+          "sass-loader",
+        ],
       },
     ],
   },
