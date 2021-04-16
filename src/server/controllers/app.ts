@@ -161,12 +161,15 @@ app.post(
 
     const analyses = (
       await Promise.all(
-        messageIds
-          .map((messageId) => channel.messages.fetch(messageId))
-          .map(
-            async (message) =>
-              await to(Perspective.analyzeMessage(await message))
-          )
+        messageIds.map(async (messageId) => {
+          const [err, message] = await to(channel.messages.fetch(messageId));
+          if (err) return [err] as const;
+
+          const [err2, result] = await to(Perspective.analyzeMessage(message));
+          if (err2) return [err2] as const;
+
+          return [null, result] as const;
+        })
       )
     ).map(([error, result]) => ({
       error: error && { name: error.name, message: error.message },
