@@ -8,6 +8,7 @@ export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
       <h1>
         <b>Con</b>cord
       </h1>
+      <a href="/login">Login with Discord</a>
     </div>
     <div className={styles.content}>{children}</div>
   </div>

@@ -1,8 +1,9 @@
 import to from "await-to-js";
 import { useReducer, useState } from "react";
-import { api, Message } from "../api";
+import { Message } from "../../endpoints";
+import { api } from "../api";
 import * as Sockets from "../sockets";
-import { useAsyncEffect } from "./use-async-effect";
+import { useAsyncEffect } from "./utility-hooks";
 
 export const useMessages = ({
   guildId,

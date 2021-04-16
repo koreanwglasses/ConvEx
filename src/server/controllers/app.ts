@@ -4,6 +4,7 @@ import asyncHandler from "express-async-handler";
 import passport from "passport";
 import { resolve } from "path";
 import * as config from "../../config";
+import { routes } from "../../endpoints";
 import { asyncFilter } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "./discord";
@@ -26,10 +27,10 @@ app.use(sessionMiddleware);
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get("/login", passport.authenticate("discord"));
+app.get(routes.auth, passport.authenticate("discord"));
 
 app.get(
-  "/login/callback",
+  routes.authCallback,
   passport.authenticate("discord", {
     failureRedirect: "/",
   }),
@@ -66,7 +67,7 @@ const requirePermission = (permission: Discord.Permission) =>
   });
 
 app.post(
-  "/api/guild/list",
+  routes.apiListGuilds,
   asyncHandler(async (req, res) => {
     if (req.isUnauthenticated()) return res.sendStatus(401);
 
@@ -85,7 +86,7 @@ app.post(
 );
 
 app.post(
-  "/api/guild",
+  routes.apiFetchGuild,
   requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId } = req.body;
@@ -95,7 +96,7 @@ app.post(
 );
 
 app.post(
-  "/api/channel",
+  routes.apiFetchChannel,
   requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId, channelId } = req.body;
@@ -108,7 +109,7 @@ app.post(
 );
 
 app.post(
-  "/api/message/list",
+  routes.apiListMessages,
   requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId, channelId, limit = 100 } = req.body;
@@ -130,7 +131,7 @@ app.post(
 /////////////////////
 
 app.post(
-  "/api/analyze",
+  routes.apiAnalyze,
   requirePermission("canView"),
   asyncHandler(async (req, res) => {
     const { guildId, channelId, messageIds } = req.body as {

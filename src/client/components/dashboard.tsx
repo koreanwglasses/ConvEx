@@ -7,10 +7,12 @@ import {
   useParams,
   useRouteMatch,
 } from "react-router-dom";
+import { Channel, Guild, routes } from "../../endpoints";
 import { join } from "../../utils";
-import { api, Channel, Guild } from "../api";
-import { useAwaitAll, useAwaitTo } from "../hooks/use-await";
+import { api } from "../api";
+import { useAPI } from "../hooks/use-api";
 import { useMessages } from "../hooks/use-messages";
+import { useAwaitAll } from "../hooks/utility-hooks";
 import * as Sockets from "../sockets";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
@@ -35,7 +37,7 @@ export const Dashboard = () => {
 };
 
 const GuildSelector = () => {
-  const [err, guilds] = useAwaitTo(api("/api/guild/list"));
+  const [err, guilds] = useAPI(routes.apiListGuilds);
   const { url } = useRouteMatch();
   return (
     <div className={styles.guildSelector}>
@@ -59,7 +61,7 @@ const GuildSelector = () => {
 
 const GuildDashboard = () => {
   const { guildId } = useParams<{ guildId: string }>();
-  const [guildErr, guild] = useAwaitTo(api("/api/guild", { guildId }));
+  const [guildErr, guild] = useAPI(routes.apiFetchGuild, { guildId });
   const channels = useAwaitAll(
     guild?.channels.map((channelId) =>
       api("/api/channel", { guildId, channelId })

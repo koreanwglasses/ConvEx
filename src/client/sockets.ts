@@ -1,6 +1,6 @@
 import io from "socket.io-client";
+import { Message } from "../endpoints";
 import { rootURL } from "../utils";
-import { Message } from "./api";
 
 const URL = rootURL();
 const socket = io(URL, { autoConnect: false }) as SocketIOClient.Socket & {

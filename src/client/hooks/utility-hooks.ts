@@ -1,6 +1,14 @@
 import to from "await-to-js";
-import React, { useState } from "react";
-import { useAsyncEffect } from "./use-async-effect";
+import React, { useEffect, useState } from "react";
+
+export const useAsyncEffect = (
+  effect: () => void,
+  deps?: React.DependencyList
+) => {
+  useEffect(() => {
+    effect();
+  }, deps);
+};
 
 export const useAwait = <T = unknown>(
   promise: Promise<T>,

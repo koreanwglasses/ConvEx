@@ -18,7 +18,7 @@ module.exports = merge(common, {
             options: {
               modules: {
                 localIdentName: "[local]_[hash:base64:5]",
-                exportLocalsConvention: "camelCase"
+                exportLocalsConvention: "camelCase",
               },
             },
           },

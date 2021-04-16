@@ -17,3 +17,5 @@ export const join = (path0: string, ...paths: string[]) =>
 
 export const rootURL = () =>
   `${config.baseURL}${+config.port === 80 ? "" : `:${config.port}`}`;
+
+export type ValueOf<T> = T[keyof T];

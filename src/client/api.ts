@@ -1,23 +1,10 @@
-import * as Discord from "discord.js";
+import { APIRoutes, RequestBody, ResponseBody } from "../endpoints";
+import { ValueOf } from "../utils";
 
-export function api(
-  endpoint: "/api/guild",
-  body: { guildId: string }
-): Promise<Guild>;
-
-export function api(endpoint: "/api/guild/list"): Promise<Guild[]>;
-
-export function api(
-  endpoint: "/api/channel",
-  body: { guildId: string; channelId: string }
-): Promise<Channel>;
-
-export function api(
-  endpoint: "/api/message/list",
-  body: { guildId: string; channelId: string; limit?: number }
-): Promise<Message[]>;
-
-export async function api<T>(endpoint: string, body?: unknown): Promise<T> {
+export async function api<R extends ValueOf<APIRoutes>>(
+  endpoint: R,
+  body?: RequestBody[R]
+): Promise<ResponseBody[R]> {
   const response = await fetch(endpoint, {
     credentials: "same-origin",
     method: "POST",
@@ -29,9 +16,7 @@ export async function api<T>(endpoint: string, body?: unknown): Promise<T> {
 
   if (response.status !== 200) throw new APIError(response);
 
-  const result = await response.json();
-
-  return result as T;
+  return await response.json();
 }
 
 export class APIError extends Error {
@@ -42,7 +27,3 @@ export class APIError extends Error {
     return this.response.status === 401;
   }
 }
-
-export type Guild = Pick<Discord.Guild, "name" | "id"> & { channels: string[] };
-export type Channel = Pick<Discord.GuildChannel, "type" | "id" | "name">;
-export type Message = Pick<Discord.Message, "content" | "id">;
