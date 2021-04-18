@@ -27,7 +27,9 @@
   }
 
   &-content-container {
-    vertical-align: bottom;
+    display: flex;
+    flex-direction: column-reverse;
+    min-height: $height;
   }
 }
 

@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import * as Perspective from "perspective-api-client";
 import * as React from "react";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import {
   Link,
   Route,
@@ -106,6 +106,13 @@ const ChannelView = ({
   });
   const [err2, analyses] = useAnalyses(guild.id, channel.id, messages);
 
+  const contentWrapperRef = useRef<HTMLDivElement>();
+  useEffect(() => {
+    if (contentWrapperRef.current)
+      contentWrapperRef.current.scrollTop =
+        contentWrapperRef.current.scrollHeight;
+  }, [messages]);
+
   return (
     <div className={styles.channelView}>
       <h4>#{channel.name}</h4>
@@ -113,7 +120,10 @@ const ChannelView = ({
       {err2 && <i>Error loading analyses: {err2.message}</i>}
       {!(err || err2) && !(messages && analyses) && <i>Loading...</i>}
       {messages && analyses && (
-        <div className={styles.channelViewContentWrapper}>
+        <div
+          ref={contentWrapperRef}
+          className={styles.channelViewContentWrapper}
+        >
           <div className={styles.channelViewContentContainer}>
             {zip(messages, analyses).map(([message, analysis]) => (
               <MessageView
