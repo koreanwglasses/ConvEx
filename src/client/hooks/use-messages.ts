@@ -1,6 +1,6 @@
 import to from "await-to-js";
 import { useReducer, useState } from "react";
-import { Message } from "../../endpoints";
+import { Message, routes } from "../../endpoints";
 import { api } from "../api";
 import * as Sockets from "../sockets";
 import { useAsyncEffect } from "./utility-hooks";
@@ -32,7 +32,7 @@ export const useMessages = ({
 
   useAsyncEffect(async () => {
     const [err, messages] = await to(
-      api("/api/message/list", { guildId, channelId })
+      api(routes.apiListMessages, { guildId, channelId })
     );
 
     if (err) return setErr(err);

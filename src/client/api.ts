@@ -1,5 +1,5 @@
-import { APIRoutes, RequestBody, ResponseBody, routes } from "../endpoints";
-import { cached, ValueOf } from "../utils";
+import { APIRoutes, RequestBody, ResponseBody } from "../endpoints";
+import { ValueOf } from "../utils";
 
 export async function api<R extends ValueOf<APIRoutes>>(
   endpoint: R,
@@ -27,7 +27,3 @@ export class APIError extends Error {
     return this.response.status === 401;
   }
 }
-
-export const fetchUser = cached((userId: string) =>
-  api(routes.apiUser, { userId })
-);

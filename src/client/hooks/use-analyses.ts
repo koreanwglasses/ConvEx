@@ -1,19 +1,9 @@
-import { Message, routes } from "../../endpoints";
-import { api } from "../api";
+import { Message } from "../../endpoints";
+import { analyzeMessages } from "../models/analysis";
 import { useAwaitTo } from "./utility-hooks";
 
-export const useAnalyses = (
-  guildId: string,
-  channelId: string,
-  messages: Message[]
-) =>
+export const useAnalyses = (messages: Message[]) =>
   useAwaitTo(
-    () =>
-      messages?.length &&
-      api(routes.apiAnalyze, {
-        guildId,
-        channelId,
-        messageIds: messages.map((messages) => messages.id),
-      }),
+    async () => messages && (await Promise.all(analyzeMessages(messages))),
     [messages]
   );

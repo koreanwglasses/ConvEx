@@ -10,12 +10,12 @@ import {
   useRouteMatch,
 } from "react-router-dom";
 import { Channel, Guild, Message, routes } from "../../endpoints";
-import { join, zip } from "../../utils";
-import { api, fetchUser } from "../api";
+import { join } from "../../utils";
 import { useAnalyses } from "../hooks/use-analyses";
 import { useAPI } from "../hooks/use-api";
 import { useMessages } from "../hooks/use-messages";
 import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
+import { fetchChannel, fetchUser } from "../models/discord";
 import * as Sockets from "../sockets";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
@@ -65,9 +65,7 @@ const GuildDashboard = () => {
   const [guildErr, guild] = useAPI(routes.apiFetchGuild, { guildId });
   const channels = useAwaitAll(
     () =>
-      guild?.channels.map((channelId) =>
-        api("/api/channel", { guildId, channelId })
-      ),
+      guild?.channels.map((channelId) => fetchChannel({ guildId, channelId })),
     [guild]
   );
   const textChannels = channels?.filter((channel) => channel.type === "text");
@@ -105,7 +103,7 @@ const ChannelView = ({
     guildId: guild.id,
     channelId: channel.id,
   });
-  const [err2, analyses] = useAnalyses(guild.id, channel.id, messages);
+  const [err2, analyses] = useAnalyses(messages);
 
   const contentWrapperRef = useRef<HTMLDivElement>();
   useEffect(() => {
@@ -119,19 +117,19 @@ const ChannelView = ({
       <Card>
         <h4>#{channel.name}</h4>
         {err && <i>Error loading messages: {err.message}</i>}
-        {err2 && <i>Error loading analyses: {err2.message}</i>}
-        {!(err || err2) && !(messages && analyses) && <i>Loading...</i>}
+        {err2 && <i>Error analyzing messages: {err2.message}</i>}
+        {!err && !err2 && !(messages && analyses) && <i>Loading...</i>}
         {messages && analyses && (
           <div
             ref={contentWrapperRef}
             className={styles.channelViewContentWrapper}
           >
             <div className={styles.channelViewContentContainer}>
-              {zip(messages, analyses).map(([message, analysis]) => (
+              {messages.map((message, i) => (
                 <MessageView
                   key={message.id}
                   message={message}
-                  analysis={analysis}
+                  analysis={analyses[i]}
                 />
               ))}
             </div>
@@ -147,13 +145,13 @@ const MessageView = ({
   analysis,
 }: {
   message: Message;
-  analysis: { error: Error; result: Perspective.Result };
+  analysis: [Error, Perspective.Result];
 }) => {
   const user = useAwait(() => fetchUser(message.authorID), []);
 
-  const heatmapColor = analysis?.result
+  const heatmapColor = analysis?.[1]
     ? d3.interpolateYlOrRd(
-        analysis.result.attributeScores.TOXICITY.summaryScore.value
+        analysis[1].attributeScores.TOXICITY.summaryScore.value
       )
     : "white";
 

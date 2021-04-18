@@ -20,9 +20,6 @@ export const rootURL = () =>
 
 export type ValueOf<T> = T[keyof T];
 
-export const zip = <S, T>(arr1: S[], arr2: T[]) =>
-  arr1.map((value, i) => [value, arr2[i]] as const);
-
 export const cached = <S extends unknown[], T>(func: (...args: S) => T) => {
   const cache = new Map<string, T>();
   return Object.assign(

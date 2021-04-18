@@ -1,4 +1,4 @@
-import { Client, Message } from "discord.js";
+import { Client, Message, PermissionString } from "discord.js";
 import * as localConfig from "../config.local";
 
 const client = new Client();
@@ -13,38 +13,60 @@ export const start = () =>
 // Permissions //
 /////////////////
 
-export type Permission = "canView";
+export type Permission = PermissionString | "IS_MEMBER";
 
-export const getPermissions = async ({
-  userId,
-  guildId,
-  channelId,
-}: {
-  userId?: string;
-  guildId?: string;
-  channelId?: string;
-}): Promise<Record<Permission, boolean>> => {
-  // TODO: Have stricter restrictions on who can access Concord
-  // Right now, anyone in a guild can access Concord for that guild
-  const guild = await client.guilds.fetch(guildId);
-  const members = await guild.members.fetch();
-  return {
-    canView: members.has(userId),
-  };
-};
-
+/**
+ * Checks for a user's permission within a guild/channel. Returns false if user
+ * is not member of guild
+ */
 export const hasPermission = async (
   {
     userId,
     guildId,
     channelId,
   }: {
-    userId?: string;
-    guildId?: string;
+    userId: string;
+    guildId: string;
     channelId?: string;
   },
-  permission: Permission
-) => (await getPermissions({ userId, guildId, channelId }))[permission];
+  permission?: Permission
+) => {
+  const guild = await client.guilds.fetch(guildId);
+  const member = await guild.members.fetch(userId);
+
+  if (!member) return false;
+  if (permission === "IS_MEMBER") return true;
+
+  if (channelId) {
+    return member.permissionsIn(channelId).has(permission);
+  }
+
+  return member.hasPermission(permission);
+};
+
+export const hasPermissions = async (
+  {
+    userId,
+    guildId,
+    channelId,
+  }: {
+    userId: string;
+    guildId: string;
+    channelId?: string;
+  },
+  permissions: Permission[]
+) => {
+  const guild = await client.guilds.fetch(guildId);
+  const member = await guild.members.fetch(userId);
+
+  if (!member) return false;
+
+  return await permissions
+    .map((permission) =>
+      hasPermission({ userId, guildId, channelId }, permission)
+    )
+    .reduce(async (a, b) => (await a) && (await b), Promise.resolve(true));
+};
 
 //////////
 // User //
@@ -80,3 +102,52 @@ client.on("message", (message) => {
   const key = `${message.guild.id},${message.channel.id}`;
   messageListeners.get(key)?.forEach((callback) => callback(message));
 });
+
+export const listMessages = async ({
+  guildId,
+  channelId,
+  limit = 100,
+  before,
+  after,
+  around,
+}: {
+  guildId: string;
+  channelId: string;
+  limit?: number;
+  before?: string;
+  after?: string;
+  around?: string;
+}) => {
+  const guild = await client.guilds.fetch(guildId);
+  const channel = guild.channels.resolve(channelId);
+
+  if (!channel.isText()) throw new Error("Channel is not text channel");
+
+  const messages = await channel.messages.fetch({
+    limit,
+    before,
+    after,
+    around,
+  });
+
+  return messages;
+};
+
+export const fetchMessage = async ({
+  guildId,
+  channelId,
+  messageId,
+}: {
+  guildId: string;
+  channelId: string;
+  messageId: string;
+}) => {
+  const guild = await client.guilds.fetch(guildId);
+  const channel = guild.channels.resolve(channelId);
+
+  if (!channel.isText()) throw new Error("Channel is not text channel");
+
+  const message = await channel.messages.fetch(messageId);
+
+  return message;
+};

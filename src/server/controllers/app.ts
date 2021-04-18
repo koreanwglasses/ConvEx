@@ -5,7 +5,7 @@ import asyncHandler from "express-async-handler";
 import passport from "passport";
 import { resolve } from "path";
 import * as config from "../../config";
-import { routes } from "../../endpoints";
+import { RequestBody, routes } from "../../endpoints";
 import { asyncFilter } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "./discord";
@@ -43,8 +43,7 @@ app.get(
 /////////////
 // Discord //
 /////////////
-
-const requirePermission = (permission: Discord.Permission) =>
+const requirePermission = (permission?: Discord.Permission) =>
   asyncHandler(async (req, res, next) => {
     if (req.isUnauthenticated()) return res.sendStatus(401);
 
@@ -52,13 +51,25 @@ const requirePermission = (permission: Discord.Permission) =>
     const { id: userId } = req.user as User;
 
     if (
-      !(await Discord.hasPermission(
-        {
-          userId,
-          guildId,
-          channelId,
-        },
-        permission
+      !(await Discord.hasPermission({ userId, guildId, channelId }, permission))
+    ) {
+      return res.sendStatus(403);
+    }
+
+    next();
+  });
+
+const requirePermissions = (permissions: Discord.Permission[]) =>
+  asyncHandler(async (req, res, next) => {
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+
+    const { guildId, channelId } = req.body;
+    const { id: userId } = req.user as User;
+
+    if (
+      !(await Discord.hasPermissions(
+        { userId, guildId, channelId },
+        permissions
       ))
     ) {
       return res.sendStatus(403);
@@ -84,6 +95,8 @@ app.post(
 app.post(
   routes.apiListGuilds,
   asyncHandler(async (req, res) => {
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+
     const { id: userId } = req.user as User;
     const guilds = await asyncFilter(Discord.listGuilds(), ({ id: guildId }) =>
       Discord.hasPermission(
@@ -91,16 +104,17 @@ app.post(
           userId,
           guildId,
         },
-        "canView"
+        "IS_MEMBER"
       )
     );
+
     return res.send(guilds);
   })
 );
 
 app.post(
   routes.apiFetchGuild,
-  requirePermission("canView"),
+  requirePermission("IS_MEMBER"),
   asyncHandler(async (req, res) => {
     const { guildId } = req.body;
     const guild = await Discord.fetchGuild(guildId);
@@ -110,7 +124,7 @@ app.post(
 
 app.post(
   routes.apiFetchChannel,
-  requirePermission("canView"),
+  requirePermission("VIEW_CHANNEL"),
   asyncHandler(async (req, res) => {
     const { guildId, channelId } = req.body;
 
@@ -123,17 +137,25 @@ app.post(
 
 app.post(
   routes.apiListMessages,
-  requirePermission("canView"),
+  requirePermissions(["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]),
   asyncHandler(async (req, res) => {
-    const { guildId, channelId, limit = 100 } = req.body;
+    const {
+      guildId,
+      channelId,
+      limit,
+      before,
+      after,
+      around,
+    } = req.body as RequestBody[typeof routes.apiListMessages];
 
-    const guild = await Discord.fetchGuild(guildId);
-    const channel = guild.channels.resolve(channelId);
-
-    if (!channel.isText())
-      return res.status(500).send("Channel is not a text channel");
-
-    const messages = await channel.messages.fetch({ limit });
+    const messages = await Discord.listMessages({
+      guildId,
+      channelId,
+      limit,
+      before,
+      after,
+      around,
+    });
 
     return res.send(messages);
   })
@@ -145,37 +167,39 @@ app.post(
 
 app.post(
   routes.apiAnalyze,
-  requirePermission("canView"),
   asyncHandler(async (req, res) => {
-    const { guildId, channelId, messageIds } = req.body as {
-      guildId: string;
-      channelId: string;
-      messageIds: string[];
-    };
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+    const { id: userId } = req.user as User;
 
-    const guild = await Discord.fetchGuild(guildId);
-    const channel = guild.channels.resolve(channelId);
+    const requests = req.body as RequestBody[typeof routes.apiAnalyze];
 
-    if (!channel.isText())
-      return res.status(500).send("Channel is not a text channel");
-
-    const analyses = (
+    const results = (
       await Promise.all(
-        messageIds.map(async (messageId) => {
-          const [err, message] = await to(channel.messages.fetch(messageId));
-          if (err) return [err] as const;
+        requests.map(async ({ guildId, channelId, messageId }) => {
+          if (
+            !(await Discord.hasPermissions({ userId, guildId, channelId }, [
+              "VIEW_CHANNEL",
+              "READ_MESSAGE_HISTORY",
+            ]))
+          )
+            return [new Error("Forbidden"), undefined] as const;
 
-          const [err2, result] = await to(Perspective.analyzeMessage(message));
-          if (err2) return [err2] as const;
+          const message = await Discord.fetchMessage({
+            guildId,
+            channelId,
+            messageId,
+          });
+          const [err, result] = await to(Perspective.analyzeMessage(message));
 
-          return [null, result] as const;
+          return [err, result] as const;
         })
       )
-    ).map(([error, result]) => ({
-      error: error && { name: error.name, message: error.message },
+    ).map(([err, result]) => [
+      err && { name: err.name, message: err.message },
       result,
-    }));
-    return res.send(analyses);
+    ]);
+
+    return res.send(results);
   })
 );
 

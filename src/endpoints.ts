@@ -29,14 +29,21 @@ export type RequestBody = {
   [routes.apiListGuilds]: undefined;
   [routes.apiFetchGuild]: { guildId: string };
   [routes.apiFetchChannel]: { guildId: string; channelId: string };
-  [routes.apiListMessages]: { guildId: string; channelId: string };
+  [routes.apiListMessages]: {
+    guildId: string;
+    channelId: string;
+    limit?: number;
+    before?: string;
+    after?: string;
+    around?: string;
+  };
 
   // Analysis
   [routes.apiAnalyze]: {
     guildId: string;
     channelId: string;
-    messageIds: string[];
-  };
+    messageId: string;
+  }[];
 };
 
 export type ResponseBody = {
@@ -49,7 +56,7 @@ export type ResponseBody = {
   [routes.apiListMessages]: Message[];
 
   // Analysis
-  [routes.apiAnalyze]: { error: Error; result: Perspective.Result }[];
+  [routes.apiAnalyze]: ([null, Perspective.Result] | [Error, undefined])[];
 };
 
 export type User = Pick<Discord.User, "username" | "discriminator"> & {

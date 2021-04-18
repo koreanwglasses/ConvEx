@@ -49,8 +49,9 @@ export const init = () => {
             {
               userId: socket.request.user.id,
               guildId,
+              channelId,
             },
-            "canView"
+            "VIEW_CHANNEL"
           ))
         ) {
           return socket.emit("error", "Forbidden");
