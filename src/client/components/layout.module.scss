@@ -1,10 +1,11 @@
 @use "base";
 
-.header {
-  $height: 120px;
+$header-height: 120px;
+$footer-height: 120px;
 
+.header {
   background-color: base.$color-primary-0;
-  height: $height;
+  height: $header-height;
   display: flex;
   justify-content: space-between;
   padding: 0 30px;
@@ -16,7 +17,7 @@
     font-weight: 200;
     font-size: 50px;
     text-transform: uppercase;
-    line-height: $height;
+    line-height: $header-height;
 
     b {
       font-weight: 600;
@@ -30,4 +31,10 @@
 
 .content {
   padding: 0 50px;
+  min-height: calc(100vh - #{$header-height + $footer-height});
+}
+
+.footer {
+  background-color: base.$color-primary-0;
+  height: $footer-height;
 }

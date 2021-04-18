@@ -62,4 +62,6 @@ export type Message = Pick<
   "content" | "id" | "createdTimestamp"
 > & {
   authorID: string;
+  channelID: string;
+  guildID: string;
 };

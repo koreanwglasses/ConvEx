@@ -1,3 +1,4 @@
+import * as d3 from "d3";
 import * as Perspective from "perspective-api-client";
 import * as React from "react";
 import { useEffect } from "react";
@@ -10,14 +11,15 @@ import {
 } from "react-router-dom";
 import { Channel, Guild, Message, routes } from "../../endpoints";
 import { join, zip } from "../../utils";
-import { api } from "../api";
+import { api, fetchUser } from "../api";
 import { useAnalyses } from "../hooks/use-analyses";
 import { useAPI } from "../hooks/use-api";
 import { useMessages } from "../hooks/use-messages";
-import { useAwaitAll } from "../hooks/utility-hooks";
+import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
 import * as Sockets from "../sockets";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
+import { ColorDiv } from "./styling/color-div";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -80,9 +82,11 @@ const GuildDashboard = () => {
       {guild && (
         <>
           <h3>{guild.name}</h3>
-          {textChannels?.map((channel) => (
-            <ChannelView guild={guild} channel={channel} key={channel.id} />
-          ))}
+          <div className={styles.guildDashboardChannelsContainer}>
+            {textChannels?.map((channel) => (
+              <ChannelView guild={guild} channel={channel} key={channel.id} />
+            ))}
+          </div>
         </>
       )}
     </div>
@@ -108,11 +112,19 @@ const ChannelView = ({
       {err && <i>Error loading messages: {err.message}</i>}
       {err2 && <i>Error loading analyses: {err2.message}</i>}
       {!(err || err2) && !(messages && analyses) && <i>Loading...</i>}
-      {messages &&
-        analyses &&
-        zip(messages, analyses).map(([message, analysis]) => (
-          <MessageView key={message.id} message={message} analysis={analysis} />
-        ))}
+      {messages && analyses && (
+        <div className={styles.channelViewContentWrapper}>
+          <div className={styles.channelViewContentContainer}>
+            {zip(messages, analyses).map(([message, analysis]) => (
+              <MessageView
+                key={message.id}
+                message={message}
+                analysis={analysis}
+              />
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -124,7 +136,13 @@ const MessageView = ({
   message: Message;
   analysis: { error: Error; result: Perspective.Result };
 }) => {
-  const [err, user] = useAPI(routes.apiUser, { userId: message.authorID });
+  const user = useAwait(() => fetchUser(message.authorID), []);
+
+  const heatmapColor = analysis?.result
+    ? d3.interpolateYlOrRd(
+        analysis.result.attributeScores.TOXICITY.summaryScore.value
+      )
+    : "transparent";
 
   const time = new Intl.DateTimeFormat("default", {
     year: "numeric",
@@ -135,7 +153,11 @@ const MessageView = ({
   }).format(new Date(message.createdTimestamp));
 
   return (
-    <div className={styles.message}>
+    <ColorDiv
+      className={styles.message}
+      backgroundColor={heatmapColor}
+      darkClass={styles.dark}
+    >
       <img src={user?.avatarURL} className={styles.messageProfile} />
       <div>
         <div>
@@ -144,7 +166,6 @@ const MessageView = ({
         </div>
         <div>{message.content}</div>
       </div>
-      <div>{analysis?.result?.attributeScores.TOXICITY.summaryScore.value}</div>
-    </div>
+    </ColorDiv>
   );
 };

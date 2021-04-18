@@ -8,6 +8,7 @@ export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
   <div>
     <Header />
     <div className={styles.content}>{children}</div>
+    <div className={styles.footer} />
   </div>
 );
 

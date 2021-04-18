@@ -10,17 +10,30 @@
 
 .guild-dashboard {
   left: auto;
+  &-channels-container {
+    display: flex;
+    justify-content: space-around;
+  }
 }
 
 .channel-view {
-  left: auto;
+  width: 400px;
+  $height: 75vh;
+
+  &-content-wrapper {
+    min-height: 600px;
+    height: $height;
+    overflow-y: scroll;
+  }
+
+  &-content-container {
+    vertical-align: bottom;
+  }
 }
 
 .message {
-  left: auto;
-  margin-bottom: 20px;
+  padding: 10px;
   display: flex;
-  width: 400px;
 
   &-profile {
     clip-path: circle(50%);
@@ -37,4 +50,12 @@
     color: base.$color-text-1;
     font-size: smaller;
   }
+
+  .dark &-time {
+    color: base.$color-text-3;
+  }
+}
+
+.dark {
+  color: base.$color-text-2;
 }

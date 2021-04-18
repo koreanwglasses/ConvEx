@@ -17,5 +17,8 @@ export const listenForMessages = (
   callback: (message: Message) => void
 ) => {
   socket.emit("listen-for-messages", { guildId, channelId });
-  socket.on("message", callback);
+  socket.on("message", (message: Message) => {
+    if (message.channelID === channelId && message.guildID === guildId)
+      callback(message);
+  });
 };
