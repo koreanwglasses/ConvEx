@@ -19,6 +19,7 @@ import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
 import * as Sockets from "../sockets";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
+import { Card } from "./styling/card";
 import { ColorDiv } from "./styling/color-div";
 
 export const Dashboard = () => {
@@ -115,26 +116,28 @@ const ChannelView = ({
 
   return (
     <div className={styles.channelView}>
-      <h4>#{channel.name}</h4>
-      {err && <i>Error loading messages: {err.message}</i>}
-      {err2 && <i>Error loading analyses: {err2.message}</i>}
-      {!(err || err2) && !(messages && analyses) && <i>Loading...</i>}
-      {messages && analyses && (
-        <div
-          ref={contentWrapperRef}
-          className={styles.channelViewContentWrapper}
-        >
-          <div className={styles.channelViewContentContainer}>
-            {zip(messages, analyses).map(([message, analysis]) => (
-              <MessageView
-                key={message.id}
-                message={message}
-                analysis={analysis}
-              />
-            ))}
+      <Card>
+        <h4>#{channel.name}</h4>
+        {err && <i>Error loading messages: {err.message}</i>}
+        {err2 && <i>Error loading analyses: {err2.message}</i>}
+        {!(err || err2) && !(messages && analyses) && <i>Loading...</i>}
+        {messages && analyses && (
+          <div
+            ref={contentWrapperRef}
+            className={styles.channelViewContentWrapper}
+          >
+            <div className={styles.channelViewContentContainer}>
+              {zip(messages, analyses).map(([message, analysis]) => (
+                <MessageView
+                  key={message.id}
+                  message={message}
+                  analysis={analysis}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </Card>
     </div>
   );
 };
@@ -152,7 +155,7 @@ const MessageView = ({
     ? d3.interpolateYlOrRd(
         analysis.result.attributeScores.TOXICITY.summaryScore.value
       )
-    : "transparent";
+    : "white";
 
   const time = new Intl.DateTimeFormat("default", {
     year: "numeric",
@@ -166,7 +169,7 @@ const MessageView = ({
     <ColorDiv
       className={styles.message}
       backgroundColor={heatmapColor}
-      darkClass={styles.dark}
+      lightClass={styles.light}
     >
       <img src={user?.avatarURL} className={styles.messageProfile} />
       <div>

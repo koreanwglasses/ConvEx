@@ -10,7 +10,7 @@ $footer-height: 120px;
   justify-content: space-between;
   padding: 0 30px;
   align-items: center;
-  color: base.$color-text-2;
+  color: base.$color-text-on-dark-0;
 
   h1 {
     margin: 0;
@@ -30,7 +30,7 @@ $footer-height: 120px;
 }
 
 .content {
-  padding: 0 50px;
+  padding: 0 50px 50px 50px;
   min-height: calc(100vh - #{$header-height + $footer-height});
 }
 

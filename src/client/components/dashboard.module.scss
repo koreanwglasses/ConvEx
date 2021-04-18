@@ -49,15 +49,15 @@
   }
 
   &-time {
-    color: base.$color-text-1;
+    color: base.$color-text-on-dark-1;
     font-size: smaller;
   }
 
-  .dark &-time {
-    color: base.$color-text-3;
+  .light &-time {
+    color: base.$color-text-on-light-1;
   }
 }
 
-.dark {
-  color: base.$color-text-2;
+.light {
+  color: base.$color-text-on-light-0;
 }
