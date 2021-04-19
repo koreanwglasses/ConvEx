@@ -106,11 +106,11 @@ const ChannelView = ({
   const [err2, analyses] = useAnalyses(messages);
 
   const contentWrapperRef = useRef<HTMLDivElement>();
-  useEffect(() => {
-    if (contentWrapperRef.current)
-      contentWrapperRef.current.scrollTop =
-        contentWrapperRef.current.scrollHeight;
-  }, [messages]);
+  // useEffect(() => {
+  //   if (contentWrapperRef.current)
+  //     contentWrapperRef.current.scrollTop =
+  //       contentWrapperRef.current.scrollHeight;
+  // }, [messages]);
 
   return (
     <div className={styles.channelView}>

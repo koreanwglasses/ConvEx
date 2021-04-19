@@ -66,48 +66,6 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
   return { ...state };
 };
 
-const expand = async ({
-  limit = 100,
-  force = false,
-  state,
-  dispatch,
-  guildId,
-  channelId,
-}: {
-  limit?: number;
-  force?: boolean;
-  state: State;
-  dispatch: React.Dispatch<Action>;
-  guildId: string;
-  channelId: string;
-}) => {
-  if (!force && state.lastExpandResult === 0) {
-    return dispatch({ type: "expandFinish", olderMessages: [], result: 0 });
-  }
-
-  const lastMessage =
-    state.messages.length && state.messages[state.messages.length - 1];
-
-  const [err, olderMessages] = await to(
-    api(routes.apiListMessages, {
-      guildId,
-      channelId,
-      limit,
-      before: lastMessage?.id,
-    })
-  );
-
-  if (err) {
-    return dispatch({ type: "expandFinish", result: -1, error: err });
-  }
-
-  return dispatch({
-    type: "expandFinish",
-    olderMessages,
-    result: olderMessages.length,
-  });
-};
-
 export const useMessages = ({
   guildId,
   channelId,
@@ -126,6 +84,40 @@ export const useMessages = ({
     isExpanding: false,
   });
 
+  const expand = async ({
+    limit = 100,
+    force = false,
+  }: {
+    limit?: number;
+    force?: boolean;
+  }) => {
+    if (!force && state.lastExpandResult === 0) {
+      return dispatch({ type: "expandFinish", olderMessages: [], result: 0 });
+    }
+
+    const lastMessage =
+      state.messages.length && state.messages[state.messages.length - 1];
+
+    const [err, olderMessages] = await to(
+      api(routes.apiListMessages, {
+        guildId,
+        channelId,
+        limit,
+        before: lastMessage?.id,
+      })
+    );
+
+    if (err) {
+      return dispatch({ type: "expandFinish", result: -1, error: err });
+    }
+
+    return dispatch({
+      type: "expandFinish",
+      olderMessages,
+      result: olderMessages.length,
+    });
+  };
+
   useEffect(() => {
     const listenerControls = Sockets.listenForMessages(
       { guildId, channelId },
@@ -137,7 +129,7 @@ export const useMessages = ({
   }, []);
 
   useEffect(() => {
-    expand({ force: true, state, dispatch, guildId, channelId });
+    expand({ force: true });
   }, []);
 
   const { error, messages, live, lastExpandResult, isExpanding } = state;
@@ -152,7 +144,7 @@ export const useMessages = ({
       expand: ({ limit, force }: { limit: number; force: boolean }) => {
         if (!isExpanding) {
           dispatch({ type: "expandStart" });
-          return expand({ limit, force, state, dispatch, guildId, channelId });
+          return expand({ limit, force });
         }
       },
       /**
