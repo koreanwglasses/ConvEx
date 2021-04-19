@@ -99,7 +99,7 @@ const ChannelView = ({
   guild: Guild;
   channel: Channel;
 }) => {
-  const [err, messages] = useMessages({
+  const [{ error, messages }, {}] = useMessages({
     guildId: guild.id,
     channelId: channel.id,
   });
@@ -116,9 +116,9 @@ const ChannelView = ({
     <div className={styles.channelView}>
       <Card>
         <h4>#{channel.name}</h4>
-        {err && <i>Error loading messages: {err.message}</i>}
+        {error && <i>Error loading messages: {error.message}</i>}
         {err2 && <i>Error analyzing messages: {err2.message}</i>}
-        {!err && !err2 && !(messages && analyses) && <i>Loading...</i>}
+        {!error && !err2 && !(messages && analyses) && <i>Loading...</i>}
         {messages && analyses && (
           <div
             ref={contentWrapperRef}
