@@ -11,11 +11,11 @@ type State = {
   messages: Message[];
 
   /**
-   * If true, new messages are pushed directly into messages. Else messages
+   * If false, new messages are pushed directly into messages. Else messages
    * are stored in buffer. This is to prevent unnecessary changes when
    * rendering.
    */
-  live: boolean;
+  paused: boolean;
 
   /** New messages are stored in buffer if live is false */
   newMessageBuffer: Message[];
@@ -23,8 +23,8 @@ type State = {
   /** Stores the number of items fetched on the last call to expand. -1 if there was an error */
   lastExpandResult: number;
 
-  /** Indicated whether or not an expand action is currently running */
-  isExpanding: boolean;
+  /** A reference to the current running expand */
+  expandPromise: Promise<number>;
 };
 type Action =
   | {
@@ -35,8 +35,9 @@ type Action =
     }
   | { type: "newMessage"; message: Message }
   | { type: "flush" }
-  | { type: "expandStart" }
-  | { type: "setLive"; live: boolean };
+  | { type: "expandStart"; expandPromise: Promise<number> }
+  | { type: "pause" }
+  | { type: "resume" };
 const reducer: React.Reducer<State, Action> = (state, action) => {
   const flush = () => {
     state.messages = [...state.newMessageBuffer, ...state.messages];
@@ -49,18 +50,20 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
       state.messages = [...state.messages, ...action.olderMessages];
     }
     state.lastExpandResult = action.result;
-    state.isExpanding = false;
+    state.expandPromise = null;
   } else if (action.type === "newMessage") {
     state.newMessageBuffer = [action.message, ...state.newMessageBuffer];
-    if (state.live) {
+    if (!state.paused) {
       flush();
     }
   } else if (action.type === "flush") {
     flush();
   } else if (action.type === "expandStart") {
-    state.isExpanding = true;
-  } else if (action.type === "setLive") {
-    state.live = action.live;
+    state.expandPromise = action.expandPromise;
+  } else if (action.type === "pause") {
+    state.paused = true;
+  } else if (action.type === "resume") {
+    state.paused = false;
   }
 
   return { ...state };
@@ -78,10 +81,10 @@ export const useMessages = ({
   const [state, dispatch] = useReducer(reducer, {
     error: null,
     messages: [],
-    live: defaultLive,
+    paused: defaultLive,
     newMessageBuffer: [],
     lastExpandResult: 0,
-    isExpanding: false,
+    expandPromise: null,
   });
 
   const expand = async ({
@@ -92,7 +95,8 @@ export const useMessages = ({
     force?: boolean;
   }) => {
     if (!force && state.lastExpandResult === 0) {
-      return dispatch({ type: "expandFinish", olderMessages: [], result: 0 });
+      dispatch({ type: "expandFinish", olderMessages: [], result: 0 });
+      return 0;
     }
 
     const lastMessage =
@@ -108,14 +112,16 @@ export const useMessages = ({
     );
 
     if (err) {
-      return dispatch({ type: "expandFinish", result: -1, error: err });
+      dispatch({ type: "expandFinish", result: -1, error: err });
+      return -1;
     }
 
-    return dispatch({
+    dispatch({
       type: "expandFinish",
       olderMessages,
       result: olderMessages.length,
     });
+    return olderMessages.length;
   };
 
   useEffect(() => {
@@ -132,26 +138,29 @@ export const useMessages = ({
     expand({ force: true });
   }, []);
 
-  const { error, messages, live, lastExpandResult, isExpanding } = state;
+  const { error, messages, paused, lastExpandResult } = state;
   return [
     {
       error,
       messages,
-      live,
+      paused,
       lastExpandResult,
-    } as Pick<State, "error" | "messages" | "live" | "lastExpandResult">,
+    } as Pick<State, "error" | "messages" | "paused" | "lastExpandResult">,
     {
       expand: ({ limit, force }: { limit: number; force: boolean }) => {
-        if (!isExpanding) {
-          dispatch({ type: "expandStart" });
-          return expand({ limit, force });
+        if (!state.expandPromise) {
+          const expandPromise = expand({ limit, force });
+          dispatch({ type: "expandStart", expandPromise });
+          return expandPromise;
         }
+        return state.expandPromise;
       },
       /**
-       * Flush new messages to message array. Called automatically if live is true
+       * Flush new messages to message array. Called automatically if paused is false
        */
       flush: () => dispatch({ type: "flush" }),
-      setLive: (live: boolean) => dispatch({ type: "setLive", live }),
+      pause: () => dispatch({ type: "pause" }),
+      resume: () => dispatch({ type: "resume" }),
     },
   ] as const;
 };
