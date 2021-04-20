@@ -12,11 +12,18 @@ socket.onAny((event, ...args) => {
 });
 
 export const connect = () => socket.connect();
+
+const subscribedChannels = new Set<string>();
 export const listenForMessages = (
   { guildId, channelId }: { guildId: string; channelId: string },
   callback: (message: Message) => void
 ) => {
-  socket.emit("listen-for-messages", { guildId, channelId });
+  if (!subscribedChannels.has(channelId)) {
+    /** Prevent subscribing is already subscribed */
+    socket.emit("listen-for-messages", { guildId, channelId });
+    subscribedChannels.add(channelId);
+  }
+
   const listener = (message: Message) => {
     if (message.channelID === channelId && message.guildID === guildId)
       callback(message);

@@ -36,8 +36,8 @@ type Action =
   | { type: "newMessage"; message: Message }
   | { type: "flush" }
   | { type: "expandStart"; expandPromise: Promise<number> }
-  | { type: "pause" }
-  | { type: "resume" };
+  | { type: "pauseStream" }
+  | { type: "resumeStream" };
 const reducer: React.Reducer<State, Action> = (state, action) => {
   const flush = () => {
     state.messages = [...state.newMessageBuffer, ...state.messages];
@@ -60,10 +60,11 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
     flush();
   } else if (action.type === "expandStart") {
     state.expandPromise = action.expandPromise;
-  } else if (action.type === "pause") {
+  } else if (action.type === "pauseStream") {
     state.paused = true;
-  } else if (action.type === "resume") {
+  } else if (action.type === "resumeStream") {
     state.paused = false;
+    flush();
   }
 
   return { ...state };
@@ -72,16 +73,18 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
 export const useMessages = ({
   guildId,
   channelId,
-  defaultLive = true,
+  defaultPaused = false,
+  onNewMessage,
 }: {
   guildId: string;
   channelId: string;
-  defaultLive?: boolean;
+  defaultPaused?: boolean;
+  onNewMessage?: (message: Message) => void;
 }) => {
   const [state, dispatch] = useReducer(reducer, {
     error: null,
     messages: [],
-    paused: defaultLive,
+    paused: defaultPaused,
     newMessageBuffer: [],
     lastExpandResult: 0,
     expandPromise: null,
@@ -93,7 +96,7 @@ export const useMessages = ({
   }: {
     limit?: number;
     force?: boolean;
-  }) => {
+  } = {}) => {
     if (!force && state.lastExpandResult === 0) {
       dispatch({ type: "expandFinish", olderMessages: [], result: 0 });
       return 0;
@@ -129,25 +132,21 @@ export const useMessages = ({
       { guildId, channelId },
       (message) => {
         dispatch({ type: "newMessage", message });
+        onNewMessage?.(message);
       }
     );
     return () => listenerControls.removeListener();
-  }, []);
+  }, [onNewMessage]);
 
   useEffect(() => {
-    expand({ force: true });
+    const expandPromise = expand({ force: true });
+    dispatch({ type: "expandStart", expandPromise });
   }, []);
 
-  const { error, messages, paused, lastExpandResult } = state;
   return [
+    state,
     {
-      error,
-      messages,
-      paused,
-      lastExpandResult,
-    } as Pick<State, "error" | "messages" | "paused" | "lastExpandResult">,
-    {
-      expand: ({ limit, force }: { limit: number; force: boolean }) => {
+      expand: ({ limit, force }: { limit?: number; force?: boolean } = {}) => {
         if (!state.expandPromise) {
           const expandPromise = expand({ limit, force });
           dispatch({ type: "expandStart", expandPromise });
@@ -159,8 +158,8 @@ export const useMessages = ({
        * Flush new messages to message array. Called automatically if paused is false
        */
       flush: () => dispatch({ type: "flush" }),
-      pause: () => dispatch({ type: "pause" }),
-      resume: () => dispatch({ type: "resume" }),
+      pauseStream: () => dispatch({ type: "pauseStream" }),
+      resumeStream: () => dispatch({ type: "resumeStream" }),
     },
   ] as const;
 };
