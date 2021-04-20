@@ -17,8 +17,8 @@ import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
 import { fetchChannel, fetchUser } from "../models/discord";
 import * as Sockets from "../sockets";
 import styles from "./dashboard.module.scss";
-import { InfiniteScroll, useMessages } from "./infinite-scroll";
 import { Layout } from "./layout";
+import { ListScroller, useMessages } from "./list-scroller";
 import { Card } from "./styling/card";
 import { ColorDiv } from "./styling/color-div";
 
@@ -103,13 +103,13 @@ const ChannelView = ({
     <div className={styles.channelView}>
       <Card>
         <h4>#{channel.name}</h4>
-        <InfiniteScroll
+        <ListScroller
           guildId={guild.id}
           channelId={channel.id}
           className={styles.channelViewContentWrapper}
         >
           <MessageList />
-        </InfiniteScroll>
+        </ListScroller>
       </Card>
     </div>
   );

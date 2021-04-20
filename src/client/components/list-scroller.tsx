@@ -3,11 +3,11 @@ import { useContext, useEffect, useRef, useState } from "react";
 import { Message } from "../../endpoints";
 import { useMessageCollection } from "../hooks/use-message-collection";
 
-const InfiniteScrollContext = React.createContext<Message[]>([]);
+const ListScrollerContext = React.createContext<Message[]>([]);
 
-export const useMessages = () => useContext(InfiniteScrollContext);
+export const useMessages = () => useContext(ListScrollerContext);
 
-export const InfiniteScroll = ({
+export const ListScroller = ({
   children,
   guildId,
   channelId,
@@ -51,7 +51,7 @@ export const InfiniteScroll = ({
   };
 
   return (
-    <InfiniteScrollContext.Provider value={messages}>
+    <ListScrollerContext.Provider value={messages}>
       <div
         ref={contentWrapperRef}
         onScroll={scrollHandler}
@@ -60,6 +60,6 @@ export const InfiniteScroll = ({
       >
         {children}
       </div>
-    </InfiniteScrollContext.Provider>
+    </ListScrollerContext.Provider>
   );
 };
