@@ -1,5 +1,3 @@
-import * as d3 from "d3";
-import * as Perspective from "perspective-api-client";
 import * as React from "react";
 import { useEffect } from "react";
 import {
@@ -9,19 +7,20 @@ import {
   useParams,
   useRouteMatch,
 } from "react-router-dom";
-import { Channel, Guild, Message, routes } from "../../endpoints";
+import { Channel, Guild, routes } from "../../endpoints";
 import { join } from "../../utils";
-import { useAnalyses } from "../hooks/use-analyses";
 import { useAPI } from "../hooks/use-api";
 import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
-import { fetchChannel, fetchUser } from "../models/discord";
+import { fetchChannel } from "../models/discord";
 import * as Sockets from "../sockets";
+import { ChannelListView } from "./channel/channel-list-view";
+import { ChannelViewA } from "./channel/channel-view-a";
+import { ChannelViewB } from "./channel/channel-view-b";
+import { ChannelViewC } from "./channel/channel-view-c";
+import { ChannelViewD } from "./channel/channel-view-d";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
-import { ListScroller, useMessages } from "./list-scroller";
 import { Card } from "./styling/card";
-import { ColorDiv } from "./styling/color-div";
-import { TimeScroller } from "./time-scroller";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -33,8 +32,11 @@ export const Dashboard = () => {
           <Route exact path={path}>
             <GuildSelector />
           </Route>
-          <Route path={`${path}/:guildId`}>
+          <Route exact path={`${path}/:guildId`}>
             <GuildDashboard />
+          </Route>
+          <Route path={`${path}/:guildId/:channelId`}>
+            <ChannelDashboard />
           </Route>
         </Switch>
       </div>
@@ -84,7 +86,11 @@ const GuildDashboard = () => {
           <h3>{guild.name}</h3>
           <div className={styles.guildDashboardChannelsContainer}>
             {textChannels?.map((channel) => (
-              <ChannelView guild={guild} channel={channel} key={channel.id} />
+              <CompactChannelView
+                guild={guild}
+                channel={channel}
+                key={channel.id}
+              />
             ))}
           </div>
         </>
@@ -93,7 +99,10 @@ const GuildDashboard = () => {
   );
 };
 
-const ChannelView = ({
+/**
+ * For use within GuildDashboard
+ */
+const CompactChannelView = ({
   guild,
   channel,
 }: {
@@ -102,87 +111,45 @@ const ChannelView = ({
 }) => {
   return (
     <div className={styles.channelView}>
-      <Card>
-        <h4>#{channel.name}</h4>
-        <ListScroller
-          guildId={guild.id}
-          channelId={channel.id}
-          className={styles.channelViewContentWrapper}
-        >
-          <MessageList />
-        </ListScroller>
-      </Card>
-      <Card>
-        <TimeScroller
-          guildId={guild.id}
-          channelId={channel.id}
-          style={{ height: "75vh" }}
-        >
-          <MessageList2 />
-        </TimeScroller>
-      </Card>
+      <Link to={(location) => `${location.pathname}/${channel.id}`}>
+        <Card>
+          <h4>#{channel.name}</h4>
+          <ChannelListView guildId={guild.id} channelId={channel.id} />
+        </Card>
+      </Link>
     </div>
   );
 };
 
-const MessageList = () => {
-  const messages = useMessages();
-  const analyses = useAnalyses(messages);
+const ChannelDashboard = () => {
+  const { path } = useRouteMatch();
+  const { guildId, channelId } = useParams<{
+    guildId: string;
+    channelId: string;
+  }>();
+
+  const channel = useAwait(() => fetchChannel({ guildId, channelId }), []);
+
   return (
-    <div className={styles.channelViewContentContainer}>
-      {messages.map((message) => (
-        <MessageView
-          key={message.id}
-          message={message}
-          analysis={analyses.get(message.id)}
-        />
-      ))}
+    <div>
+      <h4>#{channel?.name}</h4>
+      <Switch>
+        <Route exact path={path}>
+          <ChannelListView guildId={guildId} channelId={channelId} />
+        </Route>
+        <Route exact path={`${path}/view-a`}>
+          <ChannelViewA guildId={guildId} channelId={channelId} />
+        </Route>
+        <Route exact path={`${path}/view-b`}>
+          <ChannelViewB guildId={guildId} channelId={channelId} />
+        </Route>
+        <Route exact path={`${path}/view-c`}>
+          <ChannelViewC guildId={guildId} channelId={channelId} />
+        </Route>
+        <Route exact path={`${path}/view-d`}>
+          <ChannelViewD guildId={guildId} channelId={channelId} />
+        </Route>
+      </Switch>
     </div>
-  );
-};
-
-const MessageList2 = () => {
-  // const
-  return <div></div>;
-};
-
-const MessageView = ({
-  message,
-  analysis,
-}: {
-  message: Message;
-  analysis: [Error, Perspective.Result];
-}) => {
-  const user = useAwait(() => fetchUser(message.authorID), []);
-
-  const heatmapColor = analysis?.[1]
-    ? d3.interpolateYlOrRd(
-        analysis[1].attributeScores.TOXICITY.summaryScore.value
-      )
-    : "white";
-
-  const time = new Intl.DateTimeFormat("default", {
-    year: "numeric",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-  }).format(new Date(message.createdTimestamp));
-
-  return (
-    <ColorDiv
-      className={styles.message}
-      backgroundColor={heatmapColor}
-      lightClass={styles.light}
-    >
-      <img src={user?.avatarURL} className={styles.messageProfile} />
-      <div>
-        <div>
-          <span className={styles.messageUsername}>{user?.username}</span>
-          <span className={styles.messageTime}>{time}</span>
-        </div>
-        <div>{message.content}</div>
-      </div>
-    </ColorDiv>
   );
 };

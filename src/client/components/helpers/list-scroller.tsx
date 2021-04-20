@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useContext, useEffect, useRef, useState } from "react";
-import { Message } from "../../endpoints";
-import { useMessageCollection } from "../hooks/use-message-collection";
+import { Message } from "../../../endpoints";
+import { useMessageCollection } from "../../hooks/use-message-collection";
 
 const ListScrollerContext = React.createContext<Message[]>([]);
 
