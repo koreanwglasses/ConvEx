@@ -1,7 +1,6 @@
-import { Message, routes } from "../../endpoints";
+import { routes } from "../../endpoints";
 import { cached } from "../../utils";
 import { api } from "../api";
-import * as Sockets from "../sockets";
 
 export const fetchUser = cached((userId: string) =>
   api(routes.apiUser, { userId })
@@ -73,52 +72,3 @@ export const fetchChannel = cached(
 //     );
 //   }
 // };
-
-export const MessageCollection = ({
-  guildId,
-  channelId,
-}: {
-  guildId: string;
-  channelId: string;
-}) => {
-  const messages: Message[] = [];
-  let newMessages: Message[] = [];
-
-  let messageHandler_: (message: Message) => void;
-  Sockets.listenForMessages({ guildId, channelId }, (message) => {
-    newMessages.unshift(message);
-    if (messageHandler_) messageHandler_(message);
-  });
-
-  const expand = async (limit = 10) => {
-    const lastMessage = messages.length && messages[messages.length - 1];
-    if (lastMessage === null) /* already at beginning */ return 0;
-
-    const olderMessages = await api(routes.apiListMessages, {
-      guildId,
-      channelId,
-      limit,
-      before: lastMessage?.id,
-    });
-
-    messages.push(...olderMessages);
-
-    if (olderMessages.length < limit) {
-      /* reached beginning of channel */
-      messages.push(null);
-    }
-
-    return olderMessages.length;
-  };
-
-  const flushNewMessages = () => {
-    messages.unshift(...newMessages);
-    newMessages = [];
-  };
-
-  const setMessageHandler = (messageHandler?: (message: Message) => void) => {
-    messageHandler_ = messageHandler;
-  };
-
-  return { expand, messages, flushNewMessages, setMessageHandler } as const;
-};

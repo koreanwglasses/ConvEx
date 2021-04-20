@@ -70,7 +70,7 @@ const reducer: React.Reducer<State, Action> = (state, action) => {
   return { ...state };
 };
 
-export const useMessagesAdvanced = ({
+export const useMessageCollection = ({
   guildId,
   channelId,
   defaultPaused = false,

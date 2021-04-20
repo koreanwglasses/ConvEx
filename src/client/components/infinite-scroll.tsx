@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Message } from "../../endpoints";
-import { useMessagesAdvanced } from "../hooks/use-messages-advanced";
+import { useMessageCollection } from "../hooks/use-message-collection";
 
 const InfiniteScrollContext = React.createContext<Message[]>([]);
 
@@ -20,7 +20,7 @@ export const InfiniteScroll = ({
   const [
     { messages, lastExpandResult, paused },
     { expand, pauseStream, resumeStream },
-  ] = useMessagesAdvanced({
+  ] = useMessageCollection({
     guildId,
     channelId,
   });
