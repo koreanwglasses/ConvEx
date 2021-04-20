@@ -13,6 +13,10 @@ export const ChannelListView = ({
   channelId: string;
   showHeatmap?: boolean;
 }) => (
+  /**
+   * This component will handle scrolling/loading messages for us. See below for
+   * more on how to access the messages.
+   */
   <ListScroller
     guildId={guildId}
     channelId={channelId}
@@ -23,6 +27,9 @@ export const ChannelListView = ({
 );
 
 const MessageList = ({ showHeatmap }: { showHeatmap: boolean }) => {
+  /**
+   * Use the `useMessages` hook to retrieve the messages fetched by the ListScroller
+   */
   const messages = useMessages();
   const analyses = showHeatmap && useAnalyses(messages);
   return (
