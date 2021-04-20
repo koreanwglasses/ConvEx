@@ -1,7 +1,7 @@
 import to from "await-to-js";
 import React, { useEffect, useReducer } from "react";
-import { Message, routes } from "../../endpoints";
-import { api } from "../api";
+import { Message } from "../../endpoints";
+import { fetchMessages } from "../models/discord";
 import * as Sockets from "../sockets";
 
 type State = {
@@ -106,7 +106,7 @@ export const useMessageCollection = ({
       state.messages.length && state.messages[state.messages.length - 1];
 
     const [err, olderMessages] = await to(
-      api(routes.apiListMessages, {
+      fetchMessages({
         guildId,
         channelId,
         limit,
