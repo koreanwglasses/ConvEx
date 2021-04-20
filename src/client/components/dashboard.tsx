@@ -1,7 +1,7 @@
 import * as d3 from "d3";
 import * as Perspective from "perspective-api-client";
 import * as React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect } from "react";
 import {
   Link,
   Route,
@@ -13,11 +13,11 @@ import { Channel, Guild, Message, routes } from "../../endpoints";
 import { join } from "../../utils";
 import { useAnalyses } from "../hooks/use-analyses";
 import { useAPI } from "../hooks/use-api";
-import { useMessages } from "../hooks/use-messages";
 import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
 import { fetchChannel, fetchUser } from "../models/discord";
 import * as Sockets from "../sockets";
 import styles from "./dashboard.module.scss";
+import { InfiniteScroll, useMessages } from "./infinite-scroll";
 import { Layout } from "./layout";
 import { Card } from "./styling/card";
 import { ColorDiv } from "./styling/color-div";
@@ -99,65 +99,34 @@ const ChannelView = ({
   guild: Guild;
   channel: Channel;
 }) => {
-  const [
-    { error, messages, lastExpandResult, paused },
-    { expand, pauseStream, resumeStream },
-  ] = useMessages({
-    guildId: guild.id,
-    channelId: channel.id,
-  });
-  const [err2, analyses] = useAnalyses(messages);
-  const [scrollPos, setScrollPos] = useState(0);
-
-  const contentWrapperRef = useRef<HTMLDivElement>();
-  useEffect(() => {
-    if (contentWrapperRef.current)
-      contentWrapperRef.current.scrollTop =
-        contentWrapperRef.current.scrollHeight - scrollPos;
-  }, [messages]);
-
-  const scrollHandler = () => {
-    const contentWrapper = contentWrapperRef.current;
-
-    if (lastExpandResult > 0 && contentWrapper.scrollTop == 0) {
-      expand();
-    }
-
-    setScrollPos(contentWrapper.scrollHeight - contentWrapper.scrollTop);
-
-    const isScrolledToBottom =
-      contentWrapper.scrollHeight - contentWrapper.scrollTop <=
-      contentWrapper.clientHeight;
-
-    if (isScrolledToBottom && paused) resumeStream();
-    if (!isScrolledToBottom && !paused) pauseStream();
-  };
-
   return (
     <div className={styles.channelView}>
       <Card>
         <h4>#{channel.name}</h4>
-        {error && <i>Error loading messages: {error.message}</i>}
-        {err2 && <i>Error analyzing messages: {err2.message}</i>}
-        {!error && !err2 && !(messages && analyses) && <i>Loading...</i>}
-        {messages && analyses && (
-          <div
-            ref={contentWrapperRef}
-            className={styles.channelViewContentWrapper}
-            onScroll={scrollHandler}
-          >
-            <div className={styles.channelViewContentContainer}>
-              {messages.map((message) => (
-                <MessageView
-                  key={message.id}
-                  message={message}
-                  analysis={analyses.get(message.id)}
-                />
-              ))}
-            </div>
-          </div>
-        )}
+        <InfiniteScroll
+          guildId={guild.id}
+          channelId={channel.id}
+          className={styles.channelViewContentWrapper}
+        >
+          <MessageList />
+        </InfiniteScroll>
       </Card>
+    </div>
+  );
+};
+
+const MessageList = () => {
+  const messages = useMessages();
+  const analyses = useAnalyses(messages);
+  return (
+    <div className={styles.channelViewContentContainer}>
+      {messages.map((message) => (
+        <MessageView
+          key={message.id}
+          message={message}
+          analysis={analyses.get(message.id)}
+        />
+      ))}
     </div>
   );
 };
