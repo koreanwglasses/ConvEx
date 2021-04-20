@@ -128,14 +128,14 @@ export const useMessageCollection = ({
   };
 
   useEffect(() => {
-    const listenerControls = Sockets.listenForMessages(
+    const subscription = Sockets.subscribeToMessages(
       { guildId, channelId },
       (message) => {
         dispatch({ type: "newMessage", message });
         onNewMessage?.(message);
       }
     );
-    return () => listenerControls.removeListener();
+    return () => subscription.unsubscribe();
   }, [onNewMessage]);
 
   useEffect(() => {

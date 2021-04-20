@@ -21,6 +21,7 @@ import { Layout } from "./layout";
 import { ListScroller, useMessages } from "./list-scroller";
 import { Card } from "./styling/card";
 import { ColorDiv } from "./styling/color-div";
+import { TimeScroller } from "./time-scroller";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -111,6 +112,15 @@ const ChannelView = ({
           <MessageList />
         </ListScroller>
       </Card>
+      <Card>
+        <TimeScroller
+          guildId={guild.id}
+          channelId={channel.id}
+          style={{ height: "75vh" }}
+        >
+          <MessageList2 />
+        </TimeScroller>
+      </Card>
     </div>
   );
 };
@@ -129,6 +139,11 @@ const MessageList = () => {
       ))}
     </div>
   );
+};
+
+const MessageList2 = () => {
+  // const
+  return <div></div>;
 };
 
 const MessageView = ({

@@ -14,7 +14,7 @@ socket.onAny((event, ...args) => {
 export const connect = () => socket.connect();
 
 const subscribedChannels = new Set<string>();
-export const listenForMessages = (
+export const subscribeToMessages = (
   { guildId, channelId }: { guildId: string; channelId: string },
   callback: (message: Message) => void
 ) => {
@@ -31,7 +31,7 @@ export const listenForMessages = (
   socket.on("message", listener);
 
   return {
-    removeListener() {
+    unsubscribe() {
       socket.off("message", listener);
     },
   };

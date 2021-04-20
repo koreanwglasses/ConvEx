@@ -26,25 +26,25 @@ export const ListScroller = ({
   });
   const [scrollPos, setScrollPos] = useState(0);
 
-  const contentWrapperRef = useRef<HTMLDivElement>();
+  const scrollContainerRef = useRef<HTMLDivElement>();
   useEffect(() => {
-    if (contentWrapperRef.current)
-      contentWrapperRef.current.scrollTop =
-        contentWrapperRef.current.scrollHeight - scrollPos;
+    if (scrollContainerRef.current)
+      scrollContainerRef.current.scrollTop =
+        scrollContainerRef.current.scrollHeight - scrollPos;
   }, [messages]);
 
   const scrollHandler = () => {
-    const contentWrapper = contentWrapperRef.current;
+    const scrollContainer = scrollContainerRef.current;
 
-    if (lastExpandResult > 0 && contentWrapper.scrollTop == 0) {
+    if (lastExpandResult > 0 && scrollContainer.scrollTop == 0) {
       expand();
     }
 
-    setScrollPos(contentWrapper.scrollHeight - contentWrapper.scrollTop);
+    setScrollPos(scrollContainer.scrollHeight - scrollContainer.scrollTop);
 
     const isScrolledToBottom =
-      contentWrapper.scrollHeight - contentWrapper.scrollTop <=
-      contentWrapper.clientHeight;
+      scrollContainer.scrollHeight - scrollContainer.scrollTop <=
+      scrollContainer.clientHeight;
 
     if (isScrolledToBottom && paused) resumeStream();
     if (!isScrolledToBottom && !paused) pauseStream();
@@ -53,7 +53,7 @@ export const ListScroller = ({
   return (
     <ListScrollerContext.Provider value={messages}>
       <div
-        ref={contentWrapperRef}
+        ref={scrollContainerRef}
         onScroll={scrollHandler}
         style={{ overflowY: "scroll" }}
         className={className}
