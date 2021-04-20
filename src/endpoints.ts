@@ -9,6 +9,7 @@ const apiRoutes = {
   apiFetchGuild: "/api/guild",
   apiFetchChannel: "/api/channel",
   apiListMessages: "/api/message/list",
+  apiFetchMessage: "/api/message",
 
   // Analysis
   apiAnalyze: "/api/analyze",
@@ -37,6 +38,11 @@ export type RequestBody = {
     after?: string;
     around?: string;
   };
+  [routes.apiFetchMessage]: {
+    guildId: string;
+    channelId: string;
+    messageId: string;
+  };
 
   // Analysis
   [routes.apiAnalyze]: {
@@ -54,6 +60,7 @@ export type ResponseBody = {
   [routes.apiFetchGuild]: Guild;
   [routes.apiFetchChannel]: Channel;
   [routes.apiListMessages]: Message[];
+  [routes.apiFetchMessage]: Message;
 
   // Analysis
   [routes.apiAnalyze]: ([null, Perspective.Result] | [Error, undefined])[];

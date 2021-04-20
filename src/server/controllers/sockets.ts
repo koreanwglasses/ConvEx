@@ -4,7 +4,7 @@ import { Session } from "express-session";
 import passport from "passport";
 import * as SocketIO from "socket.io";
 import { sessionMiddleware } from "../middlewares/sessions";
-import * as Discord from "./discord";
+import * as Discord from "../models/discord";
 import httpServer from "./server";
 
 let io: SocketIO.Server;

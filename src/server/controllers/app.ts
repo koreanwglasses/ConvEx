@@ -8,8 +8,8 @@ import * as config from "../../config";
 import { RequestBody, routes } from "../../endpoints";
 import { asyncFilter } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
-import * as Discord from "./discord";
-import * as Perspective from "./perspective";
+import * as Discord from "../models/discord";
+import * as Perspective from "../models/perspective";
 
 const app = express();
 
@@ -158,6 +158,26 @@ app.post(
     });
 
     return res.send(messages);
+  })
+);
+
+app.post(
+  routes.apiFetchMessage,
+  requirePermissions(["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]),
+  asyncHandler(async (req, res) => {
+    const {
+      guildId,
+      channelId,
+      messageId,
+    } = req.body as RequestBody[typeof routes.apiFetchMessage];
+
+    const message = await Discord.fetchMessage({
+      guildId,
+      channelId,
+      messageId,
+    });
+
+    return res.send(message);
   })
 );
 

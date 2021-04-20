@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useContext, useEffect, useRef, useState } from "react";
 import { Message } from "../../../endpoints";
-import { useMessageCollection } from "../../hooks/use-message-collection";
+import { useLiveMessages } from "../../hooks/use-live-messages";
 
 const ListScrollerContext = React.createContext<Message[]>([]);
 
@@ -18,12 +18,13 @@ export const ListScroller = ({
   className?: string;
 }>) => {
   const [
-    { messages, lastExpandResult, paused },
-    { expand, pauseStream, resumeStream },
-  ] = useMessageCollection({
+    { messages, hasReachedBeginning },
+    { setPaused, expand },
+  ] = useLiveMessages({
     guildId,
     channelId,
   });
+
   const [scrollPos, setScrollPos] = useState(0);
 
   const scrollContainerRef = useRef<HTMLDivElement>();
@@ -36,7 +37,7 @@ export const ListScroller = ({
   const scrollHandler = () => {
     const scrollContainer = scrollContainerRef.current;
 
-    if (lastExpandResult > 0 && scrollContainer.scrollTop == 0) {
+    if (!hasReachedBeginning && scrollContainer.scrollTop == 0) {
       expand();
     }
 
@@ -46,8 +47,7 @@ export const ListScroller = ({
       scrollContainer.scrollHeight - scrollContainer.scrollTop <=
       scrollContainer.clientHeight;
 
-    if (isScrolledToBottom && paused) resumeStream();
-    if (!isScrolledToBottom && !paused) pauseStream();
+    setPaused(!isScrolledToBottom);
   };
 
   return (

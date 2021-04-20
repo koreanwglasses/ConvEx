@@ -11,15 +11,21 @@ socket.onAny((event, ...args) => {
   console.log(event, args);
 });
 
-export const connect = () => socket.connect();
+let hasConnected = false;
+const connect = () => {
+  if (!hasConnected) socket.connect();
+  hasConnected = true;
+};
 
 const subscribedChannels = new Set<string>();
 export const subscribeToMessages = (
   { guildId, channelId }: { guildId: string; channelId: string },
   callback: (message: Message) => void
 ) => {
+  connect();
+
   if (!subscribedChannels.has(channelId)) {
-    /** Prevent subscribing is already subscribed */
+    /** Prevent subscribing if already subscribed */
     socket.emit("listen-for-messages", { guildId, channelId });
     subscribedChannels.add(channelId);
   }

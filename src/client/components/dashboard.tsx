@@ -1,5 +1,4 @@
 import * as React from "react";
-import { useEffect } from "react";
 import {
   Link,
   Route,
@@ -12,7 +11,6 @@ import { join } from "../../utils";
 import { useAPI } from "../hooks/use-api";
 import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
 import { fetchChannel } from "../models/discord";
-import * as Sockets from "../sockets";
 import { ChannelListView } from "./channel/channel-list-view";
 import { ChannelViewA } from "./channel/channel-view-a";
 import { ChannelViewB } from "./channel/channel-view-b";
@@ -72,10 +70,6 @@ const GuildDashboard = () => {
     [guild]
   );
   const textChannels = channels?.filter((channel) => channel.type === "text");
-
-  useEffect(() => {
-    Sockets.connect();
-  }, []);
 
   return (
     <div className={styles.guildDashboard}>

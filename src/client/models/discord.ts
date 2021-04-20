@@ -11,142 +11,147 @@ export const fetchChannel = cached(
     api(routes.apiFetchChannel, { guildId, channelId })
 );
 
-const messageCache = new Map<string, Message[]>();
+export const messageManager = cached(
+  ({ guildId, channelId }: { guildId: string; channelId: string }) =>
+    new MessageManager(guildId, channelId)
+);
 
-export const fetchMessages = async ({
-  guildId,
-  channelId,
-  limit = 100,
-  before,
-  after,
-}: {
-  guildId: string;
-  channelId: string;
-  limit?: number;
-  before?: string;
-  after?: string;
-}) => {
-  if (before && after)
-    throw new Error("AT MOST ONE of `before` and `after` must be defined");
-
-  const key = JSON.stringify({ guildId, channelId });
-  if (!messageCache.has(key)) messageCache.set(key, []);
-
-  let messages = messageCache.get(key);
-
-  const pageSize = 100;
-
-  if (before) {
-    while (true) {
-      const lastMessage = messages.length && messages[messages.length - 1];
-
-      const idx = messages.findIndex(({ id }) => id === before);
-      if (idx !== -1 && messages.length - idx - 1 >= limit) break;
-
-      const oldMessages = await api(routes.apiListMessages, {
-        guildId,
-        channelId,
-        limit: pageSize,
-        before: lastMessage?.id,
-      });
-
-      messages = [...messages, ...oldMessages];
-
-      if (oldMessages.length < pageSize)
-        /* reached beginning of channel */ break;
-    }
-  } else {
-    while (true) {
-      const firstMessage = messages[0];
-
-      if (after) {
-        const idx = messages.findIndex(({ id }) => id === after);
-        if (idx !== -1 && idx >= limit) break;
-      }
-
-      const newMessages = await api(routes.apiListMessages, {
-        guildId,
-        channelId,
-        limit: pageSize,
-        after: firstMessage?.id,
-      });
-
-      messages = [...newMessages, ...messages];
-
-      if (newMessages.length < pageSize) /* reached end of channel */ break;
-    }
+class MessageManager {
+  private cache_: Message[] = [];
+  get cache() {
+    return [...this.cache_];
   }
 
-  messageCache.set(key, messages);
+  constructor(
+    readonly guildId: string,
+    readonly channelId: string,
+    readonly pageSize = 100
+  ) {}
 
-  if (before) {
-    const idx = messages.findIndex(({ id }) => id === before);
-    return messages.slice(idx + 1, Math.min(idx + 1 + limit, messages.length));
-  } else if (after) {
-    const idx = messages.findIndex(({ id }) => id === after);
-    return messages.slice(Math.max(idx - limit, 0), idx);
-  } else {
-    return messages.slice(0, Math.min(limit, messages.length));
+  private get last() {
+    return this.cache_.length && this.cache_[this.cache_.length - 1];
   }
-};
 
-export const fetchMessagesByTime = async ({
-  guildId,
-  channelId,
-  createdAfter,
-  createdBefore,
-}: {
-  guildId: string;
-  channelId: string;
-  createdAfter: number;
-  createdBefore: number;
-}) => {
-  const key = JSON.stringify({ guildId, channelId });
-  if (!messageCache.has(key)) messageCache.set(key, []);
+  private get first() {
+    return this.cache_[0];
+  }
 
-  let messages = messageCache.get(key);
+  private findById(id: string) {
+    return this.cache_.find((message) => id === message.id);
+  }
 
-  const pageSize = 100;
+  private hasReachedBeginning_: boolean;
+  get hasReachedBeginning() {
+    return this.hasReachedBeginning_;
+  }
 
-  while (true) {
-    const lastMessage = messages.length && messages[messages.length - 1];
+  /**
+   * Expands the cache with older messages
+   *
+   * Tries to fetch `this.pageSize` messages
+   * @returns true if oldest message has been loaded
+   */
+  private async expandBack() {
+    if (this.hasReachedBeginning_) return;
 
-    if (lastMessage?.createdTimestamp <= createdAfter) break;
+    const messages = await api(routes.apiListMessages, {
+      guildId: this.guildId,
+      channelId: this.channelId,
+      limit: this.pageSize,
+      before: this.last?.id,
+    });
+    this.cache_.push(...messages);
 
-    const oldMessages = await fetchMessages({
-      guildId,
-      channelId,
-      limit: pageSize,
-      before: lastMessage?.id,
+    const result = messages.length < this.pageSize;
+    this.hasReachedBeginning_ = result;
+    return result;
+  }
+
+  /**
+   * Expands the cache with newer messages
+   *
+   * Tries to fetch `this.pageSize` messages
+   * @returns true if newest message has been loaded
+   */
+  private async expandFront() {
+    const messages = await api(routes.apiListMessages, {
+      guildId: this.guildId,
+      channelId: this.channelId,
+      limit: this.pageSize,
+      after: this.first?.id,
+    });
+    this.cache_.unshift(...messages);
+
+    const result = messages.length < this.pageSize;
+    return result;
+  }
+
+  private async expandToMessage(id: string) {
+    if (this.findById(id)) return;
+
+    const message = await api(routes.apiFetchMessage, {
+      guildId: this.guildId,
+      channelId: this.channelId,
+      messageId: id,
     });
 
-    messages = [...messages, ...oldMessages];
+    if (
+      !this.first ||
+      message.createdTimestamp >= this.first.createdTimestamp
+    ) {
+      while (!this.findById(id) && (await this.expandFront()));
+    }
 
-    if (oldMessages.length < pageSize) /* reached beginning of channel */ break;
+    if (!this.last || message.createdTimestamp <= this.last.createdTimestamp) {
+      while (!this.findById(id) && (await this.expandBack()));
+    }
   }
 
-  while (true) {
-    const firstMessage = messages[0];
-
-    if (firstMessage?.createdTimestamp >= createdBefore) break;
-
-    const newMessages = await fetchMessages({
-      guildId,
-      channelId,
-      limit: pageSize,
-      after: firstMessage?.id,
-    });
-
-    messages = [...newMessages, ...messages];
-
-    if (newMessages.length < pageSize) /* reached end of channel */ break;
+  /**
+   * Fetches all new messages and stores them in the cache
+   */
+  private async update() {
+    while (!(await this.expandFront()));
   }
 
-  messageCache.set(key, messages);
+  async filterByTime(oldestTime: number, newestTime: number) {
+    while (
+      (!this.last || this.last.createdTimestamp > oldestTime) &&
+      (await this.expandBack())
+    );
+    while (
+      (!this.first || this.first.createdTimestamp < newestTime) &&
+      (await this.expandFront())
+    );
+    return this.cache_.filter(
+      (message) =>
+        oldestTime <= message.createdTimestamp &&
+        message.createdTimestamp <= newestTime
+    );
+  }
 
-  return messages.filter(
-    (message) =>
-      createdAfter <= message.createdTimestamp &&
-      message.createdTimestamp <= createdBefore
-  );
-};
+  async fetchBetween(oldest: string, newest?: string) {
+    await this.expandToMessage(oldest);
+    if (newest) await this.expandToMessage(newest);
+
+    const oldestIdx = this.cache_.findIndex((message) => message.id === oldest);
+    const newestIdx = newest
+      ? this.cache_.findIndex((message) => message.id === newest)
+      : 0;
+
+    return this.cache_.slice(newestIdx, oldestIdx);
+  }
+
+  async fetchBefore(before: string, limit = 100) {
+    await this.expandToMessage(before);
+    const idx = this.cache_.findIndex((message) => message.id === before);
+    while (this.cache_.length - idx - 1 < limit && (await this.expandBack()));
+    return this.cache_.slice(idx, idx + limit);
+  }
+
+  async fetchRecent(limit = 100) {
+    await this.update();
+    while (this.cache_.length < limit && (await this.expandBack()));
+    return this.cache_.slice(0, limit);
+  }
+}
