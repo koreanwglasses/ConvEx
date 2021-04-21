@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { ListScroller, useMessages } from "../helpers/list-scroller";
 import { MessageView } from "../message/message-view";

@@ -1,6 +1,6 @@
 import * as d3 from "d3";
 import * as Perspective from "perspective-api-client";
-import * as React from "react";
+import React from "react";
 import { Message } from "../../../endpoints";
 import { useAwait } from "../../hooks/utility-hooks";
 import { fetchUser } from "../../models/discord";

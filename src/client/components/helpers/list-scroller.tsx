@@ -1,5 +1,4 @@
-import * as React from "react";
-import { useContext, useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import { Message } from "../../../endpoints";
 import { useLiveMessages } from "../../hooks/use-live-messages";
 

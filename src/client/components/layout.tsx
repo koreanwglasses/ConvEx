@@ -1,4 +1,4 @@
-import * as React from "react";
+import React from "react";
 import { routes, User as Account } from "../../endpoints";
 import { useAPI } from "../hooks/use-api";
 import styles from "./layout.module.scss";

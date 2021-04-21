@@ -105,11 +105,11 @@ class MessageManager {
       !this.first ||
       message.createdTimestamp >= this.first.createdTimestamp
     ) {
-      while (!this.findById(id) && (await this.expandFront()));
+      while (!this.findById(id) && !(await this.expandFront()));
     }
 
     if (!this.last || message.createdTimestamp <= this.last.createdTimestamp) {
-      while (!this.findById(id) && (await this.expandBack()));
+      while (!this.findById(id) && !(await this.expandBack()));
     }
   }
 
@@ -123,11 +123,11 @@ class MessageManager {
   async filterByTime(oldestTime: number, newestTime: number) {
     while (
       (!this.last || this.last.createdTimestamp > oldestTime) &&
-      (await this.expandBack())
+      !(await this.expandBack())
     );
     while (
       (!this.first || this.first.createdTimestamp < newestTime) &&
-      (await this.expandFront())
+      !(await this.expandFront())
     );
     return this.cache_.filter(
       (message) =>
