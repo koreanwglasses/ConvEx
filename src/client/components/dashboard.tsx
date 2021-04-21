@@ -129,24 +129,26 @@ const ChannelDashboard = () => {
 
   return (
     <div>
-      <h4>#{channel?.name}</h4>
-      <Switch>
-        <Route exact path={path}>
-          <ChannelListView guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-a`}>
-          <ChannelViewA guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-b`}>
-          <ChannelViewB guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-c`}>
-          <ChannelViewC guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-d`}>
-          <ChannelViewD guildId={guildId} channelId={channelId} />
-        </Route>
-      </Switch>
+      <Card>
+        <h4>#{channel?.name}</h4>
+        <Switch>
+          <Route exact path={path}>
+            <ChannelListView guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-a`}>
+            <ChannelViewA guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-b`}>
+            <ChannelViewB guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-c`}>
+            <ChannelViewC guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-d`}>
+            <ChannelViewD guildId={guildId} channelId={channelId} />
+          </Route>
+        </Switch>
+      </Card>
     </div>
   );
 };

@@ -41,3 +41,22 @@ export const omitUndefined = <T>(obj: T) =>
   Object.fromEntries(
     Object.entries(obj).filter(([key, value]) => value !== undefined)
   ) as Partial<T>;
+
+/**
+ * Returns a function that ensures only one instance of the promise is running at once
+ */
+export const singletonPromise = <P extends unknown[], R>(
+  func: (...args: P) => Promise<R>
+) => {
+  let pendingPromise: Promise<R> = null;
+  return (...args: P) => {
+    if (!pendingPromise) {
+      pendingPromise = (async () => {
+        const result = await func(...args);
+        pendingPromise = null;
+        return result;
+      })();
+    }
+    return pendingPromise;
+  };
+};
