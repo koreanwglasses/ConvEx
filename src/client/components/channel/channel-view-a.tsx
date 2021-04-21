@@ -1,11 +1,6 @@
 import * as d3 from "d3";
-import * as Perspective from "perspective-api-client";
-import React, { useEffect, useRef, useState } from "react";
-import { Message } from "../../../endpoints";
-import { useAnalyses } from "../../hooks/use-analyses";
-import { useAsyncEffect } from "../../hooks/utility-hooks";
-import { messageManager } from "../../models/discord";
-import * as Sockets from "../../sockets";
+import React, { useEffect, useRef } from "react";
+import { TimeScroller, useChartProps } from "../helpers/time-scroller";
 
 export const ChannelViewA = ({
   channelId,
@@ -13,98 +8,16 @@ export const ChannelViewA = ({
 }: {
   channelId: string;
   guildId: string;
-}) => {
-  /* These lines are for dynamically setting the width/height of the chart */
-  const [[width, height], setSize] = useState([0, 0]);
+}) => (
+  <TimeScroller guildId={guildId} channelId={channelId}>
+    <Chart />
+  </TimeScroller>
+);
 
-  useEffect(() => {
-    setSize([
-      containerRef.current.clientWidth,
-      containerRef.current.clientHeight,
-    ]);
-  }, []);
+const Chart = () => {
+  /* Use this pattern to get the drawing parameters from the TimeScroller */
+  const { height, width, maxTime, timeSpan, data } = useChartProps();
 
-  const containerRef = useRef<HTMLDivElement>();
-  useEffect(() => {
-    const updateSize = () => {
-      setSize([
-        containerRef.current.clientWidth,
-        containerRef.current.clientHeight,
-      ]);
-    };
-    window.addEventListener("resize", updateSize);
-    return () => window.removeEventListener("resize", updateSize);
-  }, [setSize]);
-
-  /* These lines control the timespan shown in the graph 
-   * Currently, the time span is continuously updating to reflect the current
-   * time */
-  const [maxTime, setMaxTime] = useState(Date.now());
-  const [timeSpan, setTimeSpan] = useState(1000 * 60 * 60);
-  useEffect(() => {
-    const rc = setInterval(() => {
-      setMaxTime(Date.now());
-    }, 1000);
-    return () => clearInterval(rc);
-  }, [setMaxTime]);
-
-  /* These lines fetch the relevant messages and adds new messages as they come
-   * in. Currently, if the timespan changes, the messages does not change. */
-  const [messages, setMessages] = useState<Message[]>([]);
-  useAsyncEffect(async () => {
-    setMessages(
-      await messageManager({ guildId, channelId }).filterByTime(
-        maxTime - timeSpan,
-        maxTime
-      )
-    );
-  }, []);
-  useEffect(() => {
-    const subscription = Sockets.subscribeToMessages(
-      { guildId, channelId },
-      (message) => {
-        setMessages([message, ...messages]);
-      }
-    );
-    return () => subscription.unsubscribe();
-  }, [messages, setMessages]);
-
-  /* The analyzes the messages retrieved above. The result automatically updates
-   * when messages updates */
-  const analyses = useAnalyses(messages);
-
-  /* This compiles the messages and analyses in a data format that is then
-   * passed into the chart */
-  const data = messages?.map(
-    (message) => [message, analyses?.get(message.id)?.result] as const
-  );
-
-  return (
-    <div ref={containerRef} style={{ width: "100%", height: "75vh" }}>
-      <Chart
-        height={height}
-        width={width}
-        data={data}
-        maxTime={maxTime}
-        timeSpan={timeSpan}
-      />
-    </div>
-  );
-};
-
-const Chart = ({
-  data,
-  height,
-  width,
-  maxTime,
-  timeSpan,
-}: {
-  data: (readonly [Message, Perspective.Result])[];
-  height: number;
-  width: number;
-  maxTime: number;
-  timeSpan: number;
-}) => {
   const padding = { left: 50, top: 20, bottom: 20, right: 20 };
 
   const y = d3
