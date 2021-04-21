@@ -98,17 +98,43 @@ export const TimeScroller = ({
   }, []);
 
   /* This allows the user to manually scroll to different times*/
+  const scrollSplitX = 30;
+  const scrollScale = ({
+    deltaY,
+    timeSpan,
+  }: {
+    deltaY: number;
+    timeSpan: number;
+  }) => {
+    setTimeSpan(timeSpan * Math.exp(deltaY * 0.001));
+  };
+  const scrollTime = ({
+    deltaY,
+    maxTime,
+    timeSpan,
+  }: {
+    deltaY: number;
+    maxTime: number;
+    timeSpan: number;
+  }) => {
+    const newMaxTime = maxTime + deltaY * timeSpan * 0.001;
+    if (newMaxTime >= Date.now()) {
+      setAutoScroll(true);
+      if (!autoScroll) refetch({ maxTime: Date.now(), timeSpan });
+    } else {
+      setMaxTime(newMaxTime);
+      setAutoScroll(false);
+    }
+  };
   useEffect(() => {
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
-      const newMaxTime = maxTime + e.deltaY * timeSpan * 0.001;
-      if (newMaxTime >= Date.now()) {
-        setAutoScroll(true);
-        if (!autoScroll) refetch({ maxTime: Date.now(), timeSpan });
-      } else {
-        setMaxTime(newMaxTime);
-        setAutoScroll(false);
-      }
+      if (
+        e.clientX - containerRef.current.getBoundingClientRect().left <
+        scrollSplitX
+      )
+        scrollScale({ deltaY: e.deltaY, timeSpan });
+      else scrollTime({ deltaY: e.deltaY, maxTime, timeSpan });
     };
     containerRef.current.addEventListener("wheel", onWheel);
     return () => containerRef.current.removeEventListener("wheel", onWheel);
