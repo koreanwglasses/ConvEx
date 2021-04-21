@@ -2,7 +2,10 @@ import { Result } from "perspective-api-client";
 import { Message, routes } from "../../endpoints";
 import { api } from "../api";
 
-const analysisCache = new Map<string, Promise<[Error, Result]>>();
+const analysisCache = new Map<
+  string,
+  Promise<{ error: Error; result: Result }>
+>();
 export const analyzeMessages = async (messages: Message[]) => {
   const uncached = messages.filter((message) => !analysisCache.has(message.id));
   if (uncached.length) {

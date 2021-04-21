@@ -12,13 +12,13 @@ export const MessageView = ({
   analysis,
 }: {
   message: Message;
-  analysis?: [Error, Perspective.Result];
+  analysis?: { error: Error; result: Perspective.Result };
 }) => {
   const user = useAwait(() => fetchUser(message.authorID), []);
 
-  const heatmapColor = analysis?.[1]
+  const heatmapColor = analysis?.result
     ? d3.interpolateYlOrRd(
-        analysis[1].attributeScores.TOXICITY.summaryScore.value
+        analysis.result.attributeScores.TOXICITY.summaryScore.value
       )
     : "white";
 

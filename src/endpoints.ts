@@ -63,7 +63,7 @@ export type ResponseBody = {
   [routes.apiFetchMessage]: Message;
 
   // Analysis
-  [routes.apiAnalyze]: ([null, Perspective.Result] | [Error, undefined])[];
+  [routes.apiAnalyze]: { error: Error; result: Perspective.Result }[];
 };
 
 export type User = Pick<Discord.User, "username" | "discriminator"> & {

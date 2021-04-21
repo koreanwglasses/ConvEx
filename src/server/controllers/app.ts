@@ -214,10 +214,10 @@ app.post(
           return [err, result] as const;
         })
       )
-    ).map(([err, result]) => [
-      err && { name: err.name, message: err.message },
+    ).map(([err, result]) => ({
+      error: err && { name: err.name, message: err.message },
       result,
-    ]);
+    }));
 
     return res.send(results);
   })
