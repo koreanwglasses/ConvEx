@@ -36,3 +36,8 @@ export const cached = <S extends unknown[], T>(func: (...args: S) => T) => {
     }
   );
 };
+
+export const omitUndefined = <T>(obj: T) =>
+  Object.fromEntries(
+    Object.entries(obj).filter(([key, value]) => value !== undefined)
+  ) as Partial<T>;

@@ -1,5 +1,5 @@
-import { Message, routes } from "../../endpoints";
-import { cached } from "../../utils";
+import { Message, RequestBody, routes } from "../../endpoints";
+import { cached, omitUndefined } from "../../utils";
 import { api } from "../api";
 
 export const fetchUser = cached((userId: string) =>
@@ -54,12 +54,15 @@ class MessageManager {
   private async expandBack() {
     if (this.hasReachedBeginning_) return;
 
-    const messages = await api(routes.apiListMessages, {
-      guildId: this.guildId,
-      channelId: this.channelId,
-      limit: this.pageSize,
-      before: this.last?.id,
-    });
+    const messages = await api(
+      routes.apiListMessages,
+      omitUndefined({
+        guildId: this.guildId,
+        channelId: this.channelId,
+        limit: this.pageSize,
+        before: this.last?.id,
+      }) as RequestBody[typeof routes.apiListMessages]
+    );
     this.cache_.push(...messages);
 
     const result = messages.length < this.pageSize;
@@ -74,12 +77,15 @@ class MessageManager {
    * @returns true if newest message has been loaded
    */
   private async expandFront() {
-    const messages = await api(routes.apiListMessages, {
-      guildId: this.guildId,
-      channelId: this.channelId,
-      limit: this.pageSize,
-      after: this.first?.id,
-    });
+    const messages = await api(
+      routes.apiListMessages,
+      omitUndefined({
+        guildId: this.guildId,
+        channelId: this.channelId,
+        limit: this.pageSize,
+        after: this.first?.id,
+      }) as RequestBody[typeof routes.apiListMessages]
+    );
     this.cache_.unshift(...messages);
 
     const result = messages.length < this.pageSize;

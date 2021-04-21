@@ -12,7 +12,7 @@ export const useAsyncEffect = (
 
 export const useAwait = <T = unknown>(
   callback: () => Promise<T>,
-  deps?: React.DependencyList,
+  deps: React.DependencyList = [],
   initial?: T
 ) => {
   const [result, setResult] = useState(initial);
@@ -25,7 +25,7 @@ export const useAwait = <T = unknown>(
 
 export const useAwaitAll = <T = unknown>(
   callback: () => Promise<T>[],
-  deps?: React.DependencyList,
+  deps: React.DependencyList = [],
   initial?: T[]
 ) => {
   const [result, setResult] = useState(initial);
@@ -38,7 +38,7 @@ export const useAwaitAll = <T = unknown>(
 
 export const useAwaitTo = <T>(
   callback: () => Promise<T>,
-  deps?: React.DependencyList,
+  deps: React.DependencyList = [],
   initial?: T
 ) =>
   useAwait(

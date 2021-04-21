@@ -1,8 +1,8 @@
 import * as config from "../config";
-import * as Discord from "./models/discord";
 import * as Server from "./controllers/server";
 import * as Sockets from "./controllers/sockets";
 import * as Auth from "./middlewares/auth";
+import * as Discord from "./models/discord";
 
 (async () => {
   console.log(`Server running in ${config.mode} mode`);
