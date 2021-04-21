@@ -14,6 +14,7 @@ export const ChannelViewA = ({
   channelId: string;
   guildId: string;
 }) => {
+  /* These lines are for dynamically setting the width/height of the chart */
   const [[width, height], setSize] = useState([0, 0]);
 
   useEffect(() => {
@@ -35,6 +36,9 @@ export const ChannelViewA = ({
     return () => window.removeEventListener("resize", updateSize);
   }, [setSize]);
 
+  /* These lines control the timespan shown in the graph 
+   * Currently, the time span is continuously updating to reflect the current
+   * time */
   const [maxTime, setMaxTime] = useState(Date.now());
   const [timeSpan, setTimeSpan] = useState(1000 * 60 * 60);
   useEffect(() => {
@@ -44,6 +48,8 @@ export const ChannelViewA = ({
     return () => clearInterval(rc);
   }, [setMaxTime]);
 
+  /* These lines fetch the relevant messages and adds new messages as they come
+   * in. Currently, if the timespan changes, the messages does not change. */
   const [messages, setMessages] = useState<Message[]>([]);
   useAsyncEffect(async () => {
     setMessages(
@@ -63,7 +69,12 @@ export const ChannelViewA = ({
     return () => subscription.unsubscribe();
   }, [messages, setMessages]);
 
+  /* The analyzes the messages retrieved above. The result automatically updates
+   * when messages updates */
   const analyses = useAnalyses(messages);
+
+  /* This compiles the messages and analyses in a data format that is then
+   * passed into the chart */
   const data = messages?.map(
     (message) => [message, analyses?.get(message.id)?.result] as const
   );
