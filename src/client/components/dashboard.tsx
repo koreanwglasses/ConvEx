@@ -105,7 +105,10 @@ const CompactChannelView = ({
 }) => {
   return (
     <div className={styles.channelView}>
-      <Link to={(location) => `${location.pathname}/${channel.id}`}>
+      <Link
+        to={(location) => `${location.pathname}/${channel.id}`}
+        style={{ textDecoration: "none", color: "inherit" }}
+      >
         <Card>
           <h4>#{channel.name}</h4>
           <ChannelListView guildId={guild.id} channelId={channel.id} />
