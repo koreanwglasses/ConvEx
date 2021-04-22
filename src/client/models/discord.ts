@@ -70,6 +70,8 @@ class MessageManager {
     return result;
   });
 
+  private lastExpandFrontTime = 0;
+
   /**
    * Expands the cache with newer messages
    *
@@ -77,6 +79,8 @@ class MessageManager {
    * @returns true if newest message has been loaded
    */
   private expandFront = singletonPromise(async () => {
+    this.lastExpandFrontTime = Date.now();
+
     const messages = await api(
       routes.apiListMessages,
       omitUndefined({
@@ -126,7 +130,7 @@ class MessageManager {
       !(await this.expandBack())
     );
     while (
-      (!this.first || this.first.createdTimestamp < newestTime) &&
+      this.lastExpandFrontTime < newestTime &&
       !(await this.expandFront())
     );
     return this.cache_.filter(
