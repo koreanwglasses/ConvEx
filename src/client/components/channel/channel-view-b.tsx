@@ -9,8 +9,10 @@ import React from "react";
  */
 
 /**
- * Hybrid view where messages are stacked on top of one another. And displayed
- * alongside bar chart(s) of scores (e.g. TOXICITY)
+ * - Hybrid view where messages are stacked on top of one another.
+ * - Bar chart is displayed alongside messages
+ * - When the user hovers over a bar, it should highlight all the bars of the
+ *   same user while dimming other bars
  */
 export const ChannelViewB = ({
   channelId,
