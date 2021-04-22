@@ -16,6 +16,7 @@ import { ChannelViewA } from "./channel/channel-view-a";
 import { ChannelViewB } from "./channel/channel-view-b";
 import { ChannelViewC } from "./channel/channel-view-c";
 import { ChannelViewD } from "./channel/channel-view-d";
+import { ChannelViewExperimental } from "./channel/channel-view-experimental";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
 import { Card } from "./styling/card";
@@ -146,6 +147,9 @@ const ChannelDashboard = () => {
           </Route>
           <Route exact path={`${path}/view-d`}>
             <ChannelViewD guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/experimental`}>
+            <ChannelViewExperimental guildId={guildId} channelId={channelId} />
           </Route>
         </Switch>
       </Card>

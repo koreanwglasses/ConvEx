@@ -1,31 +1,64 @@
-import * as Perspective from "perspective-api-client";
-import React, { useContext, useEffect, useRef, useState } from "react";
+import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { useAsyncEffect } from "../../hooks/utility-hooks";
 import { messageManager } from "../../models/discord";
 import * as Sockets from "../../sockets";
 
-const TimeScrollerContext = React.createContext<{
-  width: number;
-  height: number;
+const ChartGroupContext = createContext<{
+  autoScroll: boolean;
   maxTime: number;
   timeSpan: number;
-  setMaxTime: React.Dispatch<React.SetStateAction<number>>;
-  setTimeSpan: React.Dispatch<React.SetStateAction<number>>;
-  data: (readonly [Message, Perspective.Result])[];
-}>(null);
+  y: (timeStamp: number) => number;
+}>({
+  autoScroll: undefined,
+  maxTime: undefined,
+  timeSpan: undefined,
+  y: undefined,
+});
 
-export const useChartProps = () => useContext(TimeScrollerContext);
+const useMessages = (guildId: string, channelId: string) => {
+  const { autoScroll, maxTime, timeSpan } = useContext(ChartGroupContext);
 
-export const TimeScroller = ({
-  channelId,
-  guildId,
-  children,
-}: React.PropsWithChildren<{
-  channelId: string;
-  guildId: string;
-}>) => {
+  /* This state stores the messages within the timespan */
+  const [messages, setMessages] = useState<Message[]>([]);
+
+  /* fetches messages within timespan and updates state */
+  const refetch = async ({
+    maxTime,
+    timeSpan,
+  }: {
+    maxTime: number;
+    timeSpan: number;
+  }) => {
+    setMessages(
+      await messageManager({ guildId, channelId }).filterByTime(
+        maxTime - timeSpan,
+        maxTime
+      )
+    );
+  };
+
+  /* Stream messages directly if autoscroll is enabled */
+  useEffect(() => {
+    if (autoScroll) {
+      const subscription = Sockets.subscribeToMessages(
+        { guildId, channelId },
+        (message) => {
+          setMessages([message, ...messages]);
+        }
+      );
+      return () => subscription.unsubscribe();
+    }
+  }, [messages, autoScroll]);
+
+  /* Perform an initial fetch if autoscroll is enabled */
+  useEffect(() => {
+    if (autoScroll) refetch({ maxTime, timeSpan });
+  }, []);
+}
+
+export const ChartGroup = ({ children }: { children: React.ReactNode }) => {
   /* These lines are for dynamically setting the width/height of the chart */
   const [[width, height], setSize] = useState([0, 0]);
 
@@ -52,25 +85,6 @@ export const TimeScroller = ({
   const [maxTime, setMaxTime] = useState(Date.now());
   const [timeSpan, setTimeSpan] = useState(1000 * 60 * 60);
 
-  /* This state stores the messages within the timespan */
-  const [messages, setMessages] = useState<Message[]>([]);
-
-  /* fetches messages within timespan and updates state */
-  const refetch = async ({
-    maxTime,
-    timeSpan,
-  }: {
-    maxTime: number;
-    timeSpan: number;
-  }) => {
-    setMessages(
-      await messageManager({ guildId, channelId }).filterByTime(
-        maxTime - timeSpan,
-        maxTime
-      )
-    );
-  };
-
   /* These lines handle realtime/autoscrolling */
   const [autoScroll, setAutoScroll] = useState(true);
   useEffect(() => {
@@ -81,23 +95,6 @@ export const TimeScroller = ({
       return () => clearInterval(rc);
     }
   }, [autoScroll]);
-
-  useEffect(() => {
-    if (autoScroll) {
-      const subscription = Sockets.subscribeToMessages(
-        { guildId, channelId },
-        (message) => {
-          setMessages([message, ...messages]);
-        }
-      );
-      return () => subscription.unsubscribe();
-    }
-  }, [messages, autoScroll]);
-
-  /* Perform an initial fetch if autoscroll is enabled */
-  useEffect(() => {
-    if (autoScroll) refetch({ maxTime, timeSpan });
-  }, []);
 
   /* This allows the user to manually scroll to different times*/
   const scrollSplitX = 50;
@@ -162,20 +159,8 @@ export const TimeScroller = ({
   );
 
   return (
-    <TimeScrollerContext.Provider
-      value={{
-        width,
-        height,
-        maxTime,
-        timeSpan,
-        data,
-        setMaxTime,
-        setTimeSpan,
-      }}
-    >
-      <div ref={containerRef} style={{ width: "100%", height: "75vh" }}>
-        {children}
-      </div>
-    </TimeScrollerContext.Provider>
+    <ChartGroupContext.Provider
+      value={undefined}
+    >{children}</ChartGroupContext.Provider>
   );
 };
