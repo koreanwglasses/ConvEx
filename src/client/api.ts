@@ -7,12 +7,13 @@ export async function api<R extends ValueOf<APIRoutes>>(
   body?: RequestBody[R]
 ): Promise<ResponseBody[R]> {
   const url =
-    process.env.NODE_ENV === "remote-development"
+    config.mode === "remote-development"
       ? `${config.remoteBaseURL}:${config.port}${endpoint}`
       : endpoint;
 
   const response = await fetch(url, {
-    credentials: "same-origin",
+    credentials:
+      config.mode === "remote-development" ? "include" : "same-origin",
     method: "POST",
     headers: {
       "Content-Type": "application/json",

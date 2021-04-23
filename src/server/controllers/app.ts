@@ -11,11 +11,13 @@ import { asyncFilter } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "../models/discord";
 import * as Perspective from "../models/perspective";
+import methodOverride from 'method-override';
 
 const app = express();
 
 if (config.mode === "remote-development") {
-  app.use(cors());
+  // app.use(cors());
+  app.use(methodOverride());
   app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Credentials", (true as unknown) as string);
     res.header("Access-Control-Allow-Origin", req.headers.origin);
