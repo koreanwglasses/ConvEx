@@ -54,11 +54,7 @@ app.get(
     failureRedirect: "/",
   }),
   (req, res) => {
-    res.redirect(
-      config.mode === "remote-development"
-        ? `${config.localFrontEndUrl}/dashboard`
-        : "/dashboard"
-    );
+    res.redirect("/dashboard");
   }
 );
 
@@ -261,7 +257,14 @@ app.use(
 
 // Let react handle routing
 app.get("*", (req, res) => {
-  res.sendFile(
+  if (config.mode === "remote-development") {
+    console.log(
+      `Received a request for ${req.path} from ${req.ip}. Redirecting to ${config.localFrontEndUrl}${req.path}...`
+    );
+    return res.redirect(`${config.localFrontEndUrl}${req.path}`);
+  }
+
+  return res.sendFile(
     resolve(config.mode === "development" ? "dist" : "build", "index.html")
   );
 });
