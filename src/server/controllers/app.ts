@@ -258,7 +258,7 @@ app.use(
 // Let react handle routing
 app.get("*", (req, res) => {
   if (config.mode === "remote-development") {
-    console.log();
+    console.log(resolveEndpoint(req.path));
     return res.redirect(resolveEndpoint(req.path));
   }
 
