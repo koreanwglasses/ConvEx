@@ -7,7 +7,7 @@ import passport from "passport";
 import { resolve } from "path";
 import * as config from "../../config";
 import { RequestBody, routes } from "../../endpoints";
-import { asyncFilter } from "../../utils";
+import { asyncFilter, resolveEndpoint } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "../models/discord";
 import * as Perspective from "../models/perspective";
@@ -54,11 +54,7 @@ app.get(
     failureRedirect: "/",
   }),
   (req, res) => {
-    res.redirect(
-      config.mode === "remote-development"
-        ? `${config.localFrontEndUrl}/dashboard`
-        : "/dashboard"
-    );
+    res.redirect("/dashboard");
   }
 );
 
@@ -261,7 +257,10 @@ app.use(
 
 // Let react handle routing
 app.get("*", (req, res) => {
-  res.sendFile(
+  if (config.mode === "remote-development")
+    return res.redirect(resolveEndpoint(req.path));
+
+  return res.sendFile(
     resolve(config.mode === "development" ? "dist" : "build", "index.html")
   );
 });
