@@ -7,7 +7,7 @@ import passport from "passport";
 import { resolve } from "path";
 import * as config from "../../config";
 import { RequestBody, routes } from "../../endpoints";
-import { asyncFilter, resolveEndpoint } from "../../utils";
+import { asyncFilter } from "../../utils";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "../models/discord";
 import * as Perspective from "../models/perspective";
@@ -258,8 +258,10 @@ app.use(
 // Let react handle routing
 app.get("*", (req, res) => {
   if (config.mode === "remote-development") {
-    console.log(resolveEndpoint(req.path));
-    return res.redirect(resolveEndpoint(req.path));
+    console.log(
+      `Received a request for ${req.path} from ${req.ip}. Redirecting to ${config.localFrontEndUrl}${req.path}...`
+    );
+    return res.redirect(`${config.localFrontEndUrl}${req.path}`);
   }
 
   return res.sendFile(
