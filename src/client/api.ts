@@ -1,15 +1,12 @@
 import * as config from "../config";
 import { APIRoutes, RequestBody, ResponseBody } from "../endpoints";
-import { ValueOf } from "../utils";
+import { resolveEndpoint, ValueOf } from "../utils";
 
 export async function api<R extends ValueOf<APIRoutes>>(
   endpoint: R,
   body?: RequestBody[R]
 ): Promise<ResponseBody[R]> {
-  const url =
-    config.mode === "remote-development"
-      ? `${config.remoteBaseURL}:${config.port}${endpoint}`
-      : endpoint;
+  const url = resolveEndpoint(endpoint);
 
   const response = await fetch(url, {
     credentials:
