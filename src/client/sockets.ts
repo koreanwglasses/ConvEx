@@ -3,7 +3,9 @@ import { Message } from "../endpoints";
 import { rootURL } from "../utils";
 
 const URL = rootURL();
-const socket = io(URL, { autoConnect: false }) as SocketIOClient.Socket & {
+const socket = io(URL, {
+  autoConnect: false,
+}) as SocketIOClient.Socket & {
   onAny: (handler: (event: unknown, ...args: unknown[]) => void) => void;
 };
 
