@@ -7,7 +7,6 @@ import styles from "./channel-list-view.module.scss";
 export const ChannelListView = ({
   guildId,
   channelId,
-  showHeatmap = true,
 }: {
   guildId: string;
   channelId: string;
@@ -22,16 +21,16 @@ export const ChannelListView = ({
     channelId={channelId}
     className={styles.scrollContainer}
   >
-    <MessageList showHeatmap={showHeatmap} />
+    <MessageList />
   </ListScroller>
 );
 
-const MessageList = ({ showHeatmap }: { showHeatmap: boolean }) => {
+const MessageList = () => {
   /**
    * Use the `useMessages` hook to retrieve the messages fetched by the ListScroller
    */
   const messages = useMessages();
-  const analyses = showHeatmap && useAnalyses(messages);
+  const analyses = useAnalyses(messages);
   return (
     <div className={styles.listContainer}>
       {messages.map((message) => (
