@@ -8,7 +8,7 @@
     "dev:server": "cross-env NODE_ENV=development nodemon",
     "dev": "npm-run-all --parallel dev:precompile dev:client dev:server",
     "remote-dev:server": "cross-env NODE_ENV=remote-development nodemon",
-    "remote-dev:client": "cross-env NODE_ENV=remote-development webpack serve --config webpack.dev.js"
+    "remote-dev:client": "cross-env NODE_ENV=remote-development webpack serve --config webpack.dev.js --history-api-fallback"
   },
   "dependencies": {
     "@types/d3": "^6.3.0",

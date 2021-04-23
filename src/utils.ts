@@ -16,7 +16,12 @@ export const join = (path0: string, ...paths: string[]) =>
   paths.reduce((a, b) => `${removeTrailingSlashes(a)}/${b}`, path0);
 
 export const rootURL = () =>
-  `${config.baseURL}${+config.port === 80 ? "" : `:${config.port}`}`;
+  `${
+    config.mode === "remote-development" ? config.remoteBaseURL : config.baseURL
+  }${+config.port === 80 ? "" : `:${config.port}`}`;
+
+export const resolveEndpoint = (path: string) =>
+  config.mode === "remote-development" ? `${rootURL()}${path}` : path;
 
 export type ValueOf<T> = T[keyof T];
 

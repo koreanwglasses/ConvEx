@@ -3,6 +3,7 @@ import { NextFunction, Request, RequestHandler, Response } from "express";
 import { Session } from "express-session";
 import passport from "passport";
 import * as SocketIO from "socket.io";
+import * as config from "../../config";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "../models/discord";
 import httpServer from "./server";
@@ -10,7 +11,16 @@ import httpServer from "./server";
 let io: SocketIO.Server;
 
 export const init = () => {
-  io = new SocketIO.Server(httpServer);
+  io = new SocketIO.Server(
+    httpServer,
+    config.mode === "remote-development" && {
+      cors: {
+        origin: "http://localhost:8080",
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+    }
+  );
 
   type Socket = SocketIO.Socket & {
     request: { user: User; session: Session & { socketId: string } };
