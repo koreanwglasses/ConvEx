@@ -13,9 +13,11 @@ export const init = () => {
       {
         clientID: localConfig.clientID,
         clientSecret: localConfig.clientSecret,
-        callbackURL: `${config.baseURL}${
-          +config.port === 80 ? "" : `:${config.port}`
-        }${routes.authCallback}`,
+        callbackURL: `${
+          config.mode === "remote-development"
+            ? config.remoteBaseURL
+            : config.baseURL
+        }${+config.port === 80 ? "" : `:${config.port}`}${routes.authCallback}`,
         scope: ["identify", "guilds"],
       },
       (accessToken, refreshToken, profile, done) => {

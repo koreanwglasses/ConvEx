@@ -1,4 +1,5 @@
 import to from "await-to-js";
+import cors from "cors";
 import { User } from "discord.js";
 import express from "express";
 import asyncHandler from "express-async-handler";
@@ -13,6 +14,7 @@ import * as Perspective from "../models/perspective";
 
 const app = express();
 
+if (config.mode === "remote-development") app.use(cors());
 app.use(express.json());
 
 //////////////
@@ -36,7 +38,11 @@ app.get(
     failureRedirect: "/",
   }),
   (req, res) => {
-    res.redirect("/dashboard");
+    res.redirect(
+      config.mode === "remote-development"
+        ? `${config.localFrontEndUrl}/dashboard`
+        : "/dashboard"
+    );
   }
 );
 

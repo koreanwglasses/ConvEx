@@ -5,4 +5,5 @@ export const mode =
     | "production"
     | "development"
     | "remote-development") || "production";
+export const localFrontEndUrl = "http://localhost:8080";
 export const remoteBaseURL = "http://dev.fred-choi.com";

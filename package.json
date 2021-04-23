@@ -7,7 +7,8 @@
     "dev:client": "cross-env NODE_ENV=development webpack --watch --config webpack.dev.js",
     "dev:server": "cross-env NODE_ENV=development nodemon",
     "dev": "npm-run-all --parallel dev:precompile dev:client dev:server",
-    "remote-dev:server": "cross-env NODE_ENV=remote-development nodemon"
+    "remote-dev:server": "cross-env NODE_ENV=remote-development nodemon",
+    "remote-dev:client": "cross-env NODE_ENV=remote-development webpack serve --config webpack.dev.js"
   },
   "dependencies": {
     "@types/d3": "^6.3.0",
@@ -29,6 +30,7 @@
     "acorn": "^8.0.5",
     "await-to-js": "^3.0.0",
     "cancelable-promise": "^3.2.3",
+    "cors": "^2.8.5",
     "cross-env": "^7.0.3",
     "css-loader": "^5.1.1",
     "d3": "^6.7.0",
