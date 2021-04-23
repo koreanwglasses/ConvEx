@@ -16,5 +16,11 @@ import * as Discord from "./models/discord";
   console.log("Starting server...");
   await Server.start();
 
-  console.log(`Server listening at ${config.baseURL}:${config.port}`);
+  console.log(
+    `Server listening at ${
+      config.mode === "remote-development"
+        ? config.remoteBaseURL
+        : config.baseURL
+    }:${config.port}`
+  );
 })();

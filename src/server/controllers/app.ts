@@ -2,6 +2,7 @@ import to from "await-to-js";
 import { User } from "discord.js";
 import express from "express";
 import asyncHandler from "express-async-handler";
+import methodOverride from "method-override";
 import passport from "passport";
 import { resolve } from "path";
 import * as config from "../../config";
@@ -13,6 +14,23 @@ import * as Perspective from "../models/perspective";
 
 const app = express();
 
+if (config.mode === "remote-development") {
+  app.use(methodOverride());
+  app.use(function (req, res, next) {
+    res.header("Access-Control-Allow-Credentials", (true as unknown) as string);
+    res.header("Access-Control-Allow-Origin", req.headers.origin);
+    res.header("Access-Control-Allow-Methods", "GET,POST");
+    res.header(
+      "Access-Control-Allow-Headers",
+      "X-Requested-With, X-HTTP-Method-Override, Content-Type, Accept"
+    );
+    if ("OPTIONS" == req.method) {
+      res.sendStatus(200);
+    } else {
+      next();
+    }
+  });
+}
 app.use(express.json());
 
 //////////////
@@ -36,7 +54,11 @@ app.get(
     failureRedirect: "/",
   }),
   (req, res) => {
-    res.redirect("/dashboard");
+    res.redirect(
+      config.mode === "remote-development"
+        ? `${config.localFrontEndUrl}/dashboard`
+        : "/dashboard"
+    );
   }
 );
 
