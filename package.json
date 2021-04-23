@@ -7,7 +7,7 @@
     "dev:client": "cross-env NODE_ENV=development webpack --watch --config webpack.dev.js",
     "dev:server": "cross-env NODE_ENV=development nodemon",
     "dev": "npm-run-all --parallel dev:precompile dev:client dev:server",
-    "server-dev": "cross-env NODE_ENV=development ts-node src/server/index.ts"
+    "remote-dev:server": "cross-env NODE_ENV=remote-development nodemon"
   },
   "dependencies": {
     "@types/d3": "^6.3.0",
