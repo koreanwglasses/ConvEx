@@ -257,8 +257,10 @@ app.use(
 
 // Let react handle routing
 app.get("*", (req, res) => {
-  if (config.mode === "remote-development")
+  if (config.mode === "remote-development") {
+    console.log();
     return res.redirect(resolveEndpoint(req.path));
+  }
 
   return res.sendFile(
     resolve(config.mode === "development" ? "dist" : "build", "index.html")
