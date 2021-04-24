@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy } from "passport-discord";
-import * as config from "../../config";
 import { routes } from "../../endpoints";
+import { resolveEndpoint } from "../../utils";
 import * as localConfig from "../config.local";
 
 export const init = () => {
@@ -13,11 +13,7 @@ export const init = () => {
       {
         clientID: localConfig.clientID,
         clientSecret: localConfig.clientSecret,
-        callbackURL: `${
-          config.mode === "remote-development"
-            ? config.remoteBaseURL
-            : config.baseURL
-        }${+config.port === 80 ? "" : `:${config.port}`}${routes.authCallback}`,
+        callbackURL: resolveEndpoint(routes.authCallback),
         scope: ["identify", "guilds"],
       },
       (accessToken, refreshToken, profile, done) => {
