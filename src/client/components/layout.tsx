@@ -4,6 +4,7 @@ import { resolveEndpoint } from "../../utils";
 import { useAPI } from "../hooks/use-api";
 import styles from "./layout.module.scss";
 import "./layout.scss";
+import { UnstyledLink } from "./styling/unstyled-link";
 
 export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
   <div>
@@ -17,9 +18,11 @@ const Header = () => {
   const [err, user] = useAPI(routes.apiCurrentUser);
   return (
     <div className={styles.header}>
-      <h1>
-        <b>Con</b>cord
-      </h1>
+      <UnstyledLink to={"/"}>
+        <h1>
+          <b>Con</b>cord
+        </h1>
+      </UnstyledLink>
       <Account user={user} />
     </div>
   );
