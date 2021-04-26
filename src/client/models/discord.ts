@@ -1,5 +1,5 @@
 import { Message, RequestBody, routes } from "../../endpoints";
-import { cached, omitUndefined } from "../../utils";
+import { cached, omitUndefined, singletonPromise } from "../../utils";
 import { api } from "../api";
 
 export const fetchUser = cached((userId: string) =>
@@ -51,7 +51,7 @@ class MessageManager {
    * Tries to fetch `this.pageSize` messages
    * @returns true if oldest message has been loaded
    */
-  private async expandBack() {
+  private expandBack = singletonPromise(async () => {
     if (this.hasReachedBeginning_) return;
 
     const messages = await api(
@@ -68,7 +68,9 @@ class MessageManager {
     const result = messages.length < this.pageSize;
     this.hasReachedBeginning_ = result;
     return result;
-  }
+  });
+
+  private lastExpandFrontTime = 0;
 
   /**
    * Expands the cache with newer messages
@@ -76,7 +78,9 @@ class MessageManager {
    * Tries to fetch `this.pageSize` messages
    * @returns true if newest message has been loaded
    */
-  private async expandFront() {
+  private expandFront = singletonPromise(async () => {
+    this.lastExpandFrontTime = Date.now();
+
     const messages = await api(
       routes.apiListMessages,
       omitUndefined({
@@ -90,7 +94,7 @@ class MessageManager {
 
     const result = messages.length < this.pageSize;
     return result;
-  }
+  });
 
   private async expandToMessage(id: string) {
     if (this.findById(id)) return;
@@ -126,7 +130,7 @@ class MessageManager {
       !(await this.expandBack())
     );
     while (
-      (!this.first || this.first.createdTimestamp < newestTime) &&
+      this.lastExpandFrontTime < newestTime &&
       !(await this.expandFront())
     );
     return this.cache_.filter(

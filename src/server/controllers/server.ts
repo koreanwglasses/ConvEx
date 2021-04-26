@@ -6,7 +6,11 @@ const server = createServer(app);
 
 export const start = () =>
   new Promise<void>((res) => {
-    server.listen(config.port);
+    try {
+      server.listen(config.port);
+    } catch (e) {
+      console.error(e);
+    }
     server.once("listening", res);
   });
 

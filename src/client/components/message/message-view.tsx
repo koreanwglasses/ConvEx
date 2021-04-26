@@ -16,10 +16,10 @@ export const MessageView = ({
 }) => {
   const user = useAwait(() => fetchUser(message.authorID), []);
 
+  const toxicity =
+    analysis?.result?.attributeScores.TOXICITY.summaryScore.value;
   const heatmapColor = analysis?.result
-    ? d3.interpolateYlOrRd(
-        analysis.result.attributeScores.TOXICITY.summaryScore.value
-      )
+    ? d3.interpolateYlOrRd(toxicity)
     : "white";
 
   const time = new Intl.DateTimeFormat("default", {
@@ -42,7 +42,9 @@ export const MessageView = ({
           <span className={styles.messageUsername}>{user?.username}</span>
           <span className={styles.messageTime}>{time}</span>
         </div>
-        <div>{message.content}</div>
+        <div className={toxicity > 0.9 ? styles.censored : undefined}>
+          {message.content}
+        </div>
       </div>
     </ColorDiv>
   );

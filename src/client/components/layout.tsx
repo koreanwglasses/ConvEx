@@ -1,8 +1,10 @@
 import React from "react";
 import { routes, User as Account } from "../../endpoints";
+import { resolveEndpoint } from "../../utils";
 import { useAPI } from "../hooks/use-api";
 import styles from "./layout.module.scss";
 import "./layout.scss";
+import { UnstyledLink } from "./styling/unstyled-link";
 
 export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
   <div>
@@ -16,9 +18,11 @@ const Header = () => {
   const [err, user] = useAPI(routes.apiCurrentUser);
   return (
     <div className={styles.header}>
-      <h1>
-        <b>Con</b>cord
-      </h1>
+      <UnstyledLink to={"/"}>
+        <h1>
+          <b>Con</b>cord
+        </h1>
+      </UnstyledLink>
       <Account user={user} />
     </div>
   );
@@ -30,7 +34,7 @@ const Account = ({ user }: { user: Account }) =>
       Logged in as {user.username}#{user.discriminator}
     </span>
   ) : (
-    <a href={routes.auth} className={styles.login}>
+    <a href={resolveEndpoint(routes.auth)} className={styles.login}>
       Login with Discord
     </a>
   );

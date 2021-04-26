@@ -19,6 +19,7 @@ import { ChannelViewD } from "./channel/channel-view-d";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
 import { Card } from "./styling/card";
+import { UnstyledLink } from "./styling/unstyled-link";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
@@ -105,12 +106,12 @@ const CompactChannelView = ({
 }) => {
   return (
     <div className={styles.channelView}>
-      <Link to={(location) => `${location.pathname}/${channel.id}`}>
+      <UnstyledLink to={(location) => `${location.pathname}/${channel.id}`}>
         <Card>
           <h4>#{channel.name}</h4>
           <ChannelListView guildId={guild.id} channelId={channel.id} />
         </Card>
-      </Link>
+      </UnstyledLink>
     </div>
   );
 };
@@ -126,24 +127,26 @@ const ChannelDashboard = () => {
 
   return (
     <div>
-      <h4>#{channel?.name}</h4>
-      <Switch>
-        <Route exact path={path}>
-          <ChannelListView guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-a`}>
-          <ChannelViewA guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-b`}>
-          <ChannelViewB guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-c`}>
-          <ChannelViewC guildId={guildId} channelId={channelId} />
-        </Route>
-        <Route exact path={`${path}/view-d`}>
-          <ChannelViewD guildId={guildId} channelId={channelId} />
-        </Route>
-      </Switch>
+      <Card>
+        <h4>#{channel?.name}</h4>
+        <Switch>
+          <Route exact path={path}>
+            <ChannelListView guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-a`}>
+            <ChannelViewA guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-b`}>
+            <ChannelViewB guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-c`}>
+            <ChannelViewC guildId={guildId} channelId={channelId} />
+          </Route>
+          <Route exact path={`${path}/view-d`}>
+            <ChannelViewD guildId={guildId} channelId={channelId} />
+          </Route>
+        </Switch>
+      </Card>
     </div>
   );
 };

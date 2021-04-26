@@ -1,12 +1,14 @@
 import to from "await-to-js";
+import { cancelable } from "cancelable-promise";
 import React, { useEffect, useState } from "react";
 
 export const useAsyncEffect = (
-  effect: () => void,
+  effect: () => Promise<void>,
   deps?: React.DependencyList
 ) => {
   useEffect(() => {
-    effect();
+    const promise = cancelable(effect());
+    return () => promise.cancel();
   }, deps);
 };
 

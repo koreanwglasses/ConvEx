@@ -1,12 +1,16 @@
+import * as config from "../config";
 import { APIRoutes, RequestBody, ResponseBody } from "../endpoints";
-import { ValueOf } from "../utils";
+import { resolveEndpoint, ValueOf } from "../utils";
 
 export async function api<R extends ValueOf<APIRoutes>>(
   endpoint: R,
   body?: RequestBody[R]
 ): Promise<ResponseBody[R]> {
-  const response = await fetch(endpoint, {
-    credentials: "same-origin",
+  const url = resolveEndpoint(endpoint);
+
+  const response = await fetch(url, {
+    credentials:
+      config.mode === "remote-development" ? "include" : "same-origin",
     method: "POST",
     headers: {
       "Content-Type": "application/json",

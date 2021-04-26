@@ -14,8 +14,16 @@ const TimeScrollerContext = React.createContext<{
   data: (readonly [Message, Perspective.Result])[];
 }>(null);
 
+/**
+ * @deprecated This module now just wraps "./message-scroller". Prefer using
+ * "./message-scroller" directly
+ */
 export const useChartProps = () => useContext(TimeScrollerContext);
 
+/**
+ * @deprecated This module now just wraps "./message-scroller". Prefer using
+ * "./message-scroller" directly
+ */
 export const TimeScroller = ({
   channelId,
   guildId,
@@ -44,40 +52,110 @@ export const TimeScroller = ({
     };
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
-  }, [setSize]);
+  }, []);
 
-  /* These lines control the timespan shown in the graph
-   * Currently, the time span is continuously updating to reflect the current
-   * time */
+  /* These states control the timespan shown in the graph */
   const [maxTime, setMaxTime] = useState(Date.now());
   const [timeSpan, setTimeSpan] = useState(1000 * 60 * 60);
-  useEffect(() => {
-    const rc = setInterval(() => {
-      setMaxTime(Date.now());
-    }, 1000);
-    return () => clearInterval(rc);
-  }, [setMaxTime]);
 
-  /* These lines fetch the relevant messages and adds new messages as they come
-   * in. Currently, if the timespan changes, the messages does not change. */
+  /* This state stores the messages within the timespan */
   const [messages, setMessages] = useState<Message[]>([]);
-  useAsyncEffect(async () => {
+
+  /* fetches messages within timespan and updates state */
+  const refetch = async ({
+    maxTime,
+    timeSpan,
+  }: {
+    maxTime: number;
+    timeSpan: number;
+  }) => {
     setMessages(
       await messageManager({ guildId, channelId }).filterByTime(
         maxTime - timeSpan,
         maxTime
       )
     );
-  }, []);
+  };
+
+  /* These lines handle realtime/autoscrolling */
+  const [autoScroll, setAutoScroll] = useState(true);
   useEffect(() => {
-    const subscription = Sockets.subscribeToMessages(
-      { guildId, channelId },
-      (message) => {
-        setMessages([message, ...messages]);
-      }
-    );
-    return () => subscription.unsubscribe();
-  }, [messages, setMessages]);
+    if (autoScroll) {
+      const rc = setInterval(() => {
+        setMaxTime(Date.now());
+      }, 1000);
+      return () => clearInterval(rc);
+    }
+  }, [autoScroll]);
+
+  useEffect(() => {
+    if (autoScroll) {
+      const subscription = Sockets.subscribeToMessages(
+        { guildId, channelId },
+        (message) => {
+          setMessages([message, ...messages]);
+        }
+      );
+      return () => subscription.unsubscribe();
+    }
+  }, [messages, autoScroll]);
+
+  /* Perform an initial fetch if autoscroll is enabled */
+  useEffect(() => {
+    if (autoScroll) refetch({ maxTime, timeSpan });
+  }, []);
+
+  /* This allows the user to manually scroll to different times*/
+  const scrollSplitX = 50;
+  const scrollScale = ({
+    deltaY,
+    timeSpan,
+  }: {
+    deltaY: number;
+    timeSpan: number;
+  }) => {
+    const newTimeSpan = timeSpan * Math.exp(deltaY * 0.001);
+    setMaxTime(maxTime + (newTimeSpan - timeSpan) / 2);
+    setTimeSpan(newTimeSpan);
+  };
+  const scrollTime = ({
+    deltaY,
+    maxTime,
+    timeSpan,
+  }: {
+    deltaY: number;
+    maxTime: number;
+    timeSpan: number;
+  }) => {
+    const newMaxTime = maxTime + deltaY * timeSpan * 0.001;
+    if (newMaxTime >= Date.now()) {
+      setAutoScroll(true);
+      if (!autoScroll) refetch({ maxTime: Date.now(), timeSpan });
+    } else {
+      setMaxTime(newMaxTime);
+      setAutoScroll(false);
+    }
+  };
+  useEffect(() => {
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      const mouseX =
+        e.clientX - containerRef.current.getBoundingClientRect().left;
+
+      if (mouseX < scrollSplitX) scrollScale({ deltaY: e.deltaY, timeSpan });
+      else scrollTime({ deltaY: e.deltaY, maxTime, timeSpan });
+    };
+    containerRef.current.addEventListener("wheel", onWheel);
+    return () => containerRef.current.removeEventListener("wheel", onWheel);
+  }, [timeSpan, maxTime, autoScroll]);
+
+  /* These lines fetch the relevant messages and adds new messages as they come
+   * in */
+  useAsyncEffect(async () => {
+    if (!autoScroll) {
+      refetch({ maxTime, timeSpan });
+    }
+  }, [maxTime, timeSpan, autoScroll]);
 
   /* The analyzes the messages retrieved above. The result automatically updates
    * when messages updates */

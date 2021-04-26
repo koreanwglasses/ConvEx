@@ -1,4 +1,5 @@
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const webpack = require("webpack");
 
 module.exports = {
   // Enable sourcemaps for debugging webpack's output.
@@ -60,5 +61,6 @@ module.exports = {
         "/main.js",
       ],
     }),
+    new webpack.EnvironmentPlugin(["NODE_ENV"]),
   ],
 };

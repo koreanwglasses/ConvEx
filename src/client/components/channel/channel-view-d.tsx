@@ -7,6 +7,13 @@ import { useAnalyses } from "../../hooks/use-analyses";
 import { MessageView } from "../message/message-view";
 import styles from "../dashboard.module.scss";
 
+const toxicityThreshold = 0.7;
+
+/**
+ * - Displays a line graph representation of message toxicity
+ * - y-axis represents absolute time
+ * - only messages above a certain threshold are shown
+ */
 export const ChannelViewD = ({
   channelId,
   guildId,
