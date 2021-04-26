@@ -42,7 +42,7 @@ export const MessageView = ({
           <span className={styles.messageUsername}>{user?.username}</span>
           <span className={styles.messageTime}>{time}</span>
         </div>
-        <div className={toxicity > 0.9 && styles.censored}>
+        <div className={toxicity > 0.9 ? styles.censored : undefined}>
           {message.content}
         </div>
       </div>
