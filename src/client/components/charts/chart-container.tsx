@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useRef } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import mergeRefs from "react-merge-refs";
 import { useDispatch } from "./message-scroller";
 
@@ -24,6 +30,22 @@ export const ChartContainer = React.forwardRef(
     ref
   ) => {
     const containerRef = useRef<HTMLDivElement>();
+    const [[width, height], setSize] = useState([
+      undefined as number,
+      undefined as number,
+    ]);
+    useEffect(() => {
+      const updateSize = () => {
+        setSize([
+          containerRef.current.clientWidth,
+          containerRef.current.clientHeight,
+        ]);
+      };
+      updateSize();
+
+      addEventListener("resize", updateSize);
+      return () => removeEventListener("resize", updateSize);
+    }, []);
 
     const { scroll } = useDispatch();
     useEffect(() => {
@@ -40,8 +62,8 @@ export const ChartContainer = React.forwardRef(
     return (
       <ChartContainerContext.Provider
         value={{
-          width: containerRef.current?.clientWidth,
-          height: containerRef.current?.clientHeight,
+          width,
+          height,
         }}
       >
         <div

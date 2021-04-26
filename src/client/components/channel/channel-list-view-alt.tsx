@@ -47,7 +47,7 @@ const MessageList = () => {
           message={message}
           analysis={analyses?.get(message.id)}
           style={{
-            top: y(message),
+            top: y?.(message),
             position: "absolute",
             width,
             height: yAxis.type === "point" && yAxis.step,
