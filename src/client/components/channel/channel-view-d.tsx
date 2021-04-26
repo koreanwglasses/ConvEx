@@ -24,7 +24,7 @@ export const ChannelViewD = ({
   <ListScroller
     guildId={guildId}
     channelId={channelId}
-    className={styles.channelView}
+    // className={styles.channelView}
   >
     {/* <MessageListByUser
       userId={"310213952850231296"}
@@ -98,12 +98,6 @@ const Chart = () => {
     yAxisG: d3.Selection<SVGGElement, unknown, null, undefined>;
   }>();
 
-  // const messages = useMessages();
-  // // get messages from a single user
-  // const singleUserMessages = messages.filter(m => m.authorID === userId);
-  // console.log(singleUserMessages);
-  // const analyses = useAnalyses(singleUserMessages);
-
   useEffect(() => {
     /* Initialization. Runs once */
     const svg = d3.select(svgRef.current);
@@ -136,7 +130,7 @@ const Chart = () => {
           ? d3.interpolateYlOrRd(
               analysis.attributeScores.TOXICITY.summaryScore.value
             )
-          : "red"
+          : "white"
       );
   }
 
