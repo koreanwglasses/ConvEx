@@ -10,10 +10,11 @@ import { ColorDiv } from "../styling/color-div";
 export const MessageView = ({
   message,
   analysis,
+  style,
 }: {
   message: Message;
   analysis?: { error: Error; result: Perspective.Result };
-}) => {
+} & Pick<React.ComponentProps<"div">, "style">) => {
   const user = useAwait(() => fetchUser(message.authorID), []);
 
   const heatmapColor = analysis?.result
@@ -35,6 +36,7 @@ export const MessageView = ({
       className={styles.message}
       backgroundColor={heatmapColor}
       lightClass={styles.light}
+      style={style}
     >
       <img src={user?.avatarURL} className={styles.messageProfile} />
       <div>

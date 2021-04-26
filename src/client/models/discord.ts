@@ -49,7 +49,7 @@ class MessageManager {
    * Expands the cache with older messages
    *
    * Tries to fetch `this.pageSize` messages
-   * @returns true if oldest message has been loaded
+   * @returns true if older messages may exist. false if oldest message has been loaded
    */
   private expandBack = singletonPromise(async () => {
     if (this.hasReachedBeginning_) return;
@@ -65,8 +65,8 @@ class MessageManager {
     );
     this.cache_.push(...messages);
 
-    const result = messages.length < this.pageSize;
-    this.hasReachedBeginning_ = result;
+    const result = messages.length >= this.pageSize;
+    this.hasReachedBeginning_ = !result;
     return result;
   });
 
@@ -76,7 +76,7 @@ class MessageManager {
    * Expands the cache with newer messages
    *
    * Tries to fetch `this.pageSize` messages
-   * @returns true if newest message has been loaded
+   * @returns true if newer messages might exist. false if newest message has been loaded
    */
   private expandFront = singletonPromise(async () => {
     this.lastExpandFrontTime = Date.now();
@@ -92,7 +92,7 @@ class MessageManager {
     );
     this.cache_.unshift(...messages);
 
-    const result = messages.length < this.pageSize;
+    const result = messages.length >= this.pageSize;
     return result;
   });
 
@@ -109,30 +109,27 @@ class MessageManager {
       !this.first ||
       message.createdTimestamp >= this.first.createdTimestamp
     ) {
-      while (!this.findById(id) && !(await this.expandFront()));
+      while (!this.findById(id) && (await this.expandFront()));
     }
 
     if (!this.last || message.createdTimestamp <= this.last.createdTimestamp) {
-      while (!this.findById(id) && !(await this.expandBack()));
+      while (!this.findById(id) && (await this.expandBack()));
     }
   }
 
   /**
    * Fetches all new messages and stores them in the cache
    */
-  private async update() {
-    while (!(await this.expandFront()));
+  private async fastForward() {
+    while (await this.expandFront());
   }
 
   async filterByTime(oldestTime: number, newestTime: number) {
     while (
       (!this.last || this.last.createdTimestamp > oldestTime) &&
-      !(await this.expandBack())
+      (await this.expandBack())
     );
-    while (
-      this.lastExpandFrontTime < newestTime &&
-      !(await this.expandFront())
-    );
+    while (this.lastExpandFrontTime < newestTime && (await this.expandFront()));
     return this.cache_.filter(
       (message) =>
         oldestTime <= message.createdTimestamp &&
@@ -152,7 +149,9 @@ class MessageManager {
     return this.cache_.slice(newestIdx, oldestIdx);
   }
 
-  async fetchBefore(before: string, limit = 100) {
+  async fetchBefore(before?: string, limit = 100) {
+    if (!before) return await this.fetchRecent(limit);
+
     await this.expandToMessage(before);
     const idx = this.cache_.findIndex((message) => message.id === before);
     while (this.cache_.length - idx - 1 < limit && (await this.expandBack()));
@@ -160,7 +159,7 @@ class MessageManager {
   }
 
   async fetchRecent(limit = 100) {
-    await this.update();
+    await this.fastForward();
     while (this.cache_.length < limit && (await this.expandBack()));
     return this.cache_.slice(0, limit);
   }

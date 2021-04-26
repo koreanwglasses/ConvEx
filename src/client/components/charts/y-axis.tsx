@@ -31,17 +31,21 @@ export const YAxis = ({
           );
         }
       }}
-      style={{ width: "50px", flexGrow: 0 }}
+      style={{ width: "60px", flexGrow: 0 }}
       ref={containerRef}
     >
       {yAxis?.type === "time" && (
-        <Chart yScale={yScale as ScaleTime<number, number, never>} />
+        <YTimeChart yScale={yScale as ScaleTime<number, number, never>} />
       )}
     </ChartContainer>
   );
 };
 
-const Chart = ({ yScale }: { yScale: ScaleTime<number, number, never> }) => {
+const YTimeChart = ({
+  yScale,
+}: {
+  yScale: ScaleTime<number, number, never>;
+}) => {
   const { width, height } = useChartSize();
   const svgRef = useRef<SVGSVGElement>();
 

@@ -25,17 +25,17 @@ export const ChartContainer = React.forwardRef(
   ) => {
     const containerRef = useRef<HTMLDivElement>();
 
-    const { scrollTime } = useDispatch();
+    const { scroll } = useDispatch();
     useEffect(() => {
       const listener =
         onWheel ||
         ((e: WheelEvent) => {
           e.preventDefault();
-          scrollTime(e.deltaY);
+          scroll(e.deltaY);
         });
       containerRef.current.addEventListener("wheel", listener);
       return () => containerRef.current.removeEventListener("wheel", listener);
-    }, [scrollTime, onWheel]);
+    }, [scroll, onWheel]);
 
     return (
       <ChartContainerContext.Provider

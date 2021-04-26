@@ -18,7 +18,7 @@ type State = {
   autoScroll: boolean;
 };
 type Dispatch = {
-  scrollTime: (state: State, deltaY: number) => void;
+  scroll: (state: State, deltaY: number) => void;
   scrollTimeScale: (state: State, deltaY: number, origin?: number) => void;
 };
 const MessageScrollerContext = createContext({
@@ -52,7 +52,7 @@ const axes = (
         .scalePoint()
         .domain(messages.map(({ id }) => id))
         .range([
-          yBounds[1] + yAxis.offset,
+          yBounds[1] + yAxis.offset - yAxis.step,
           yBounds[1] - messages.length * yAxis.step + yAxis.offset,
         ]);
     const y =
@@ -67,7 +67,7 @@ export const useDispatch = () => {
   const { state, dispatch } = useContext(MessageScrollerContext);
 
   return {
-    scrollTime: (deltaY: number) => dispatch.scrollTime(state, deltaY),
+    scroll: (deltaY: number) => dispatch.scroll(state, deltaY),
     scrollTimeScale: (deltaY: number, origin?: number) =>
       dispatch.scrollTimeScale(state, deltaY, origin),
   };
@@ -77,28 +77,28 @@ export const MessageScroller = ({
   channelId,
   guildId,
   children,
+  defaultYAxis = {
+    type: "time",
+    domain: [Date.now() - 1000 * 60 * 60, Date.now()],
+  },
 }: React.PropsWithChildren<{
   channelId: string;
   guildId: string;
+  defaultYAxis?: State["yAxis"];
 }>) => {
   const containerRef = useRef<HTMLDivElement>();
 
   ///////////
   // State //
   ///////////
-  const [yAxis, setYAxis] = useState<State["yAxis"]>({
-    type: "time",
-    domain: [Date.now() - 1000 * 60 * 60, Date.now()],
-  });
+
+  const [yAxis, setYAxis] = useState<State["yAxis"]>(defaultYAxis);
   const [messages, setMessages] = useState<State["messages"]>([]);
   const [autoScroll, setAutoScroll_] = useState<State["autoScroll"]>();
 
   /////////////
   // Helpers //
   /////////////
-
-  // Note: Until React allows dispatches within a reducer, this is the
-  // cleanest solution
 
   /* Fetches messages within timespan and updates state */
   const refetch = async ({ yAxis }: Pick<State, "yAxis">) => {
@@ -113,16 +113,52 @@ export const MessageScroller = ({
     );
   };
 
+  const expand = async ({
+    yAxis,
+    messages,
+  }: Pick<State, "yAxis" | "messages">) => {
+    if (yAxis.type !== "point")
+      throw new Error('expand should only be used with "point" mode');
+
+    setMessages([
+      ...messages,
+      ...(await messageManager({ guildId, channelId }).fetchBefore(
+        messages?.length && messages[messages.length - 1].id
+      )),
+    ]);
+  };
+
   ////////////////
   // Dispatches //
   ////////////////
+
+  const setOffset = ({ yAxis }: Pick<State, "yAxis">, offset: number) => {
+    if (yAxis.type != "point")
+      throw new Error('setOffset should only be used with "point" mode');
+
+    setYAxis({ ...yAxis, offset });
+  };
+
+  const fastForward = async ({ yAxis }: Pick<State, "yAxis">) => {
+    if (yAxis.type !== "point")
+      throw new Error('fastForward should only be used with "point" mode');
+    setMessages(await messageManager({ guildId, channelId }).fetchRecent());
+  };
 
   const setAutoScroll = (
     state: Pick<State, "yAxis" | "autoScroll">,
     autoScroll: boolean
   ) => {
     setAutoScroll_(autoScroll);
-    if (!state.autoScroll && autoScroll) refetch(state);
+    if (!state.autoScroll && autoScroll) {
+      if (state.yAxis.type === "time") {
+        refetch(state);
+      }
+      if (state.yAxis.type === "point") {
+        fastForward(state);
+        setOffset(state, 0);
+      }
+    }
   };
 
   const setTimeDomain = (
@@ -159,6 +195,24 @@ export const MessageScroller = ({
       setTimeDomain(state, [newMaxTime - timespan, newMaxTime]);
       setAutoScroll(state, false);
     }
+  };
+
+  const scrollOffset = (
+    state: Pick<State, "yAxis" | "autoScroll">,
+    deltaY: number
+  ) => {
+    const { yAxis } = state;
+    if (yAxis.type !== "point")
+      throw new Error('scrollOffset should only be used with "point" mode');
+    setOffset(state, Math.max(yAxis.offset - deltaY, 0));
+  };
+
+  const scroll = (
+    state: Pick<State, "yAxis" | "autoScroll">,
+    deltaY: number
+  ) => {
+    if (state.yAxis.type === "time") scrollTime(state, deltaY);
+    if (state.yAxis.type === "point") scrollOffset(state, deltaY);
   };
 
   const scrollTimeScale = (
@@ -226,7 +280,7 @@ export const MessageScroller = ({
     <MessageScrollerContext.Provider
       value={{
         state: { yAxis, messages, autoScroll },
-        dispatch: { scrollTime, scrollTimeScale },
+        dispatch: { scroll: scroll, scrollTimeScale },
       }}
     >
       <div
