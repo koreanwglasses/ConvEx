@@ -55,6 +55,13 @@
   .light &-time {
     color: base.$color-text-on-light-1;
   }
+
+  .censored {
+    filter: blur(3px);
+  }
+  .censored:hover {
+    filter: none;
+  }
 }
 
 .light {
