@@ -14,8 +14,16 @@ const TimeScrollerContext = React.createContext<{
   data: (readonly [Message, Perspective.Result])[];
 }>(null);
 
+/**
+ * @deprecated This module now just wraps "./message-scroller". Prefer using
+ * "./message-scroller" directly
+ */
 export const useChartProps = () => useContext(TimeScrollerContext);
 
+/**
+ * @deprecated This module now just wraps "./message-scroller". Prefer using
+ * "./message-scroller" directly
+ */
 export const TimeScroller = ({
   channelId,
   guildId,

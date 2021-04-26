@@ -65,3 +65,11 @@ export const singletonPromise = <P extends unknown[], R>(
     return pendingPromise;
   };
 };
+
+export const pick = <T extends Record<string, unknown>, K extends keyof T>(
+  source: T,
+  keys: K[]
+) =>
+  Object.fromEntries(
+    Object.entries(source).filter(([key]) => keys.includes(key as K))
+  ) as Pick<T, K>;
