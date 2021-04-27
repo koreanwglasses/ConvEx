@@ -99,7 +99,6 @@ const Tempo = () => {
     /* Initialization. Runs once */
     const svg = d3.select(svgRef.current);
     const xAxisG = svg.append("g");
-
     const xAxisLabelText = svg.append("text");
 
     selections.current = { svg, xAxisG, xAxisLabelText };
