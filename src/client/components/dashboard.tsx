@@ -12,7 +12,7 @@ import { useAPI } from "../hooks/use-api";
 import { useAwait, useAwaitAll } from "../hooks/utility-hooks";
 import { fetchChannel } from "../models/discord";
 import { ChannelListView } from "./channel/channel-list-view-alt";
-import { ChannelViewA } from "./channel/channel-view-a";
+import { ChannelViewA } from "./channel/channel-view-a-alt";
 import { ChannelViewB } from "./channel/channel-view-b";
 import { ChannelViewC } from "./channel/channel-view-c";
 import { ChannelViewD } from "./channel/channel-view-d";

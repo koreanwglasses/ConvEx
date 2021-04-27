@@ -31,7 +31,11 @@ export const YAxis = ({
           );
         }
       }}
-      style={{ width: "60px", flexGrow: 0 }}
+      style={{
+        width: yAxis.type === "time" ? "60px" : "0",
+        flexGrow: 0,
+        transition: "width 0.5s",
+      }}
       ref={containerRef}
     >
       {yAxis?.type === "time" && (

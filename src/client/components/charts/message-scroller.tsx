@@ -13,6 +13,7 @@ import { Message } from "../../../endpoints";
 import { hasDuplicates } from "../../../utils";
 import { messageManager } from "../../models/discord";
 import * as Sockets from "../../sockets";
+import { Toolbar } from "./toolbar";
 
 const DEBUG = true;
 
@@ -39,7 +40,8 @@ type Action =
   | { type: "setTimeDomain"; domain: [number, number] }
   | { type: "setAutoscroll"; autoscroll: boolean }
   | { type: "setContainerHeight"; height: number }
-  | { type: "setIsExpanding"; value: boolean };
+  | { type: "setIsExpanding"; value: boolean }
+  | { type: "setYAxisType"; value: State["yAxis"]["type"] };
 const reducer: Reducer<State, Action> = (state, action) => {
   const { yAxis, messages } = state;
 
@@ -85,6 +87,12 @@ const reducer: Reducer<State, Action> = (state, action) => {
       }
       return { ...state, isExpanding: action.value };
 
+    case "setYAxisType":
+      return {
+        ...state,
+        yAxis: { ...yAxis, type: action.value } as State["yAxis"],
+      };
+
     default:
       return state;
   }
@@ -110,6 +118,11 @@ const setOffset = (offset: number): Action => ({ type: "setOffset", offset });
 const setContainerHeight = (height: number): Action => ({
   type: "setContainerHeight",
   height,
+});
+
+const setYAxisType = (type: State["yAxis"]["type"]): Action => ({
+  type: "setYAxisType",
+  value: type,
 });
 
 const refetch = (): Thunk<State, Action> => async (dispatch, getState) => {
@@ -363,6 +376,8 @@ export const useDispatch = () => {
       scroll: (deltaY: number) => dispatch(scroll(deltaY)),
       scrollTimeScale: (deltaY: number, origin?: number) =>
         dispatch(scrollTimeScale(deltaY, origin)),
+      setYAxisType: (type: State["yAxis"]["type"]) =>
+        dispatch(setYAxisType(type)),
     }),
     [dispatch]
   );
@@ -460,6 +475,7 @@ export const MessageScroller = ({
 
   return (
     <MessageScrollerContext.Provider value={context}>
+      <Toolbar/>
       <div
         ref={containerRef}
         style={{
