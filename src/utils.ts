@@ -73,3 +73,6 @@ export const pick = <T extends Record<string, unknown>, K extends keyof T>(
   Object.fromEntries(
     Object.entries(source).filter(([key]) => keys.includes(key as K))
   ) as Pick<T, K>;
+
+export const hasDuplicates = (array: unknown[]) =>
+  new Set(array).size !== array.length;

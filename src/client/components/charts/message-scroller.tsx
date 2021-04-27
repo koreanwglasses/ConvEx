@@ -8,8 +8,11 @@ import React, {
 } from "react";
 import useThunkReducer, { Thunk } from "react-hook-thunk-reducer";
 import { Message } from "../../../endpoints";
+import { hasDuplicates } from "../../../utils";
 import { messageManager } from "../../models/discord";
 import * as Sockets from "../../sockets";
+
+const DEBUG = true;
 
 /////////////
 // Reducer //
@@ -24,20 +27,34 @@ type State = {
   messages: Message[];
   autoscroll: boolean;
   containerHeight: number;
+  isExpanding: boolean;
 };
 type Action =
   | { type: "setMessages"; messages: Message[] }
+  | { type: "pushMessages"; messages: Message[] }
   | { type: "unshiftMessages"; messages: Message[] }
   | { type: "setOffset"; offset: number }
   | { type: "setTimeDomain"; domain: [number, number] }
   | { type: "setAutoscroll"; autoscroll: boolean }
-  | { type: "setContainerHeight"; height: number };
+  | { type: "setContainerHeight"; height: number }
+  | { type: "setIsExpanding"; value: boolean };
 const reducer: Reducer<State, Action> = (state, action) => {
-  const { yAxis } = state;
+  const { yAxis, messages } = state;
 
   switch (action.type) {
     case "setMessages":
       return { ...state, messages: action.messages };
+
+    case "pushMessages":
+      if (
+        DEBUG &&
+        hasDuplicates([...messages, ...action.messages].map(({ id }) => id))
+      ) {
+        console.error(
+          "Adding duplicate messages. This is indicative of a bug."
+        );
+      }
+      return { ...state, messages: [...state.messages, ...action.messages] };
 
     case "unshiftMessages":
       return { ...state, messages: [...action.messages, ...state.messages] };
@@ -58,6 +75,14 @@ const reducer: Reducer<State, Action> = (state, action) => {
     case "setContainerHeight":
       return { ...state, containerHeight: action.height };
 
+    case "setIsExpanding":
+      if (DEBUG && state.isExpanding && action.value) {
+        console.error(
+          "isExpanding has been set to true twice in a row. This is indicative of a bug."
+        );
+      }
+      return { ...state, isExpanding: action.value };
+
     default:
       return state;
   }
@@ -65,6 +90,11 @@ const reducer: Reducer<State, Action> = (state, action) => {
 
 const setMessages = (messages: Message[]): Action => ({
   type: "setMessages",
+  messages,
+});
+
+const pushMessages = (messages: Message[]): Action => ({
+  type: "pushMessages",
   messages,
 });
 
@@ -97,18 +127,25 @@ const refetch = (): Thunk<State, Action> => async (dispatch, getState) => {
 };
 
 const expand = (): Thunk<State, Action> => async (dispatch, getState) => {
-  const { guildId, channelId, yAxis, messages } = getState();
+  const { guildId, channelId, yAxis, messages, isExpanding } = getState();
 
   if (yAxis.type !== "point")
     throw new Error('expand should only be used with "point" mode');
 
+  if (isExpanding) {
+    console.warn("A previous call to expand is still in progress. Skipping...");
+    return;
+  }
+
+  dispatch({ type: "setIsExpanding", value: true });
   dispatch(
-    unshiftMessages(
+    pushMessages(
       await messageManager({ guildId, channelId }).fetchBefore(
-        messages?.length && messages[messages.length - 1].id
+        messages.length && messages[messages.length - 1].id
       )
     )
   );
+  dispatch({ type: "setIsExpanding", value: false });
 };
 
 const fastForward = (): Thunk<State, Action> => async (dispatch, getState) => {
@@ -178,7 +215,8 @@ const scrollOffset = (deltaY: number): Thunk<State, Action> => (
   dispatch,
   getState
 ) => {
-  const { yAxis } = getState();
+  const state = getState();
+  const { yAxis, messages } = state;
   if (yAxis.type !== "point")
     throw new Error('scrollOffset should only be used with "point" mode');
 
@@ -189,6 +227,11 @@ const scrollOffset = (deltaY: number): Thunk<State, Action> => (
   } else {
     dispatch(setOffset(yAxis.offset - deltaY));
     dispatch(setAutoScroll(false));
+  }
+
+  const { y } = axes(state);
+  if (messages.length && y && y(messages[messages.length - 1]) > 0) {
+    dispatch(expand());
   }
 };
 
@@ -232,8 +275,8 @@ const scrollTimeScale = (
 /////////////
 
 const axes = (
-  { yAxis, messages }: State,
-  yBounds?: [top: number, bottom: number]
+  { yAxis, messages, containerHeight }: State,
+  yBounds: [top: number, bottom: number] = [0, containerHeight]
 ) => {
   if (yAxis.type === "time") {
     const yScale =
@@ -280,7 +323,7 @@ export const useMessages = () => {
   const { yAxis, containerHeight, messages } = context.state;
   if (yAxis.type === "point") {
     /* Improve performance by filtering out messages that would be offscreen */
-    const { y } = axes(context.state, [0, containerHeight]);
+    const { y } = axes(context.state);
     return y
       ? messages.filter((message) => {
           const y_ = y(message);
@@ -342,6 +385,7 @@ export const MessageScroller = ({
     messages: [],
     autoscroll: undefined,
     containerHeight: undefined,
+    isExpanding: false,
   });
 
   const { autoscroll, yAxis } = state;

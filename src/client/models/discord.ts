@@ -155,7 +155,7 @@ class MessageManager {
     await this.expandToMessage(before);
     const idx = this.cache_.findIndex((message) => message.id === before);
     while (this.cache_.length - idx - 1 < limit && (await this.expandBack()));
-    return this.cache_.slice(idx, idx + limit);
+    return this.cache_.slice(idx + 1, idx + limit + 1);
   }
 
   async fetchRecent(limit = 100) {
