@@ -26,7 +26,10 @@ const useStyles = makeStyles((theme) => ({
     flexGrow: 1,
   },
   button: {
-    margin: theme.spacing(1, 1.5),
+    margin: theme.spacing(1, 1),
+  },
+  avatar: {
+    margin: theme.spacing(1, 1),
   },
 }));
 
@@ -66,12 +69,29 @@ const UserNav = () => {
         <>
           <Skeleton
             variant="rect"
+            width={140}
+            height={35}
+            className={classes.button}
+          />
+          <Skeleton
+            variant="rect"
             width={120}
             height={35}
             className={classes.button}
           />
-          <Skeleton variant="circle" width={40} height={40} />
+          <Skeleton
+            variant="circle"
+            width={40}
+            height={40}
+            className={classes.avatar}
+          />
         </>
+      )}
+
+      {(err || user) && (
+        <Button variant="outlined" className={classes.button}>
+          Add to Server
+        </Button>
       )}
 
       {err && (
@@ -100,6 +120,7 @@ const UserNav = () => {
         <Avatar
           alt={`${user.username}#${user.discriminator}`}
           src={user.avatarURL}
+          className={classes.avatar}
         ></Avatar>
       )}
     </>
