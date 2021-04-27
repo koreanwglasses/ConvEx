@@ -36,6 +36,8 @@ const MessageList = () => {
 
   const messages = useMessages();
   const analyses = useAnalyses(messages);
+
+  const messageHeight = yAxis.type === "point" ? yAxis.step - 5 : 50;
   return (
     <div
       className={styles.listContainer}
@@ -50,8 +52,9 @@ const MessageList = () => {
             top: y?.(message),
             position: "absolute",
             width,
-            height: yAxis.type === "point" && yAxis.step,
+            height: messageHeight,
             boxSizing: "border-box",
+            borderRadius: messageHeight / 2,
           }}
         />
       ))}

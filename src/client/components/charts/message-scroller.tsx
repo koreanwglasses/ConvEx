@@ -132,7 +132,7 @@ const expand = (): Thunk<State, Action> => async (dispatch, getState) => {
   if (yAxis.type !== "point")
     throw new Error('expand should only be used with "point" mode');
 
-  if (isExpanding) {
+  if (DEBUG && isExpanding) {
     console.warn("A previous call to expand is still in progress. Skipping...");
     return;
   }
