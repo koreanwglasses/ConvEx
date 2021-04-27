@@ -1,7 +1,12 @@
 import * as d3 from "d3";
 import React, { useEffect, useRef } from "react";
 import { useAnalyses } from "../../hooks/use-analyses";
-import { ListScroller, useMessages } from "../helpers/list-scroller";
+import { ChartContainer, useChartSize } from "../charts/chart-container";
+import {
+  MessageScroller,
+  useAxes,
+  useMessages,
+} from "../charts/message-scroller";
 
 /**
  * Notes: A key challenge for this one is dynamically loading messages as the
@@ -24,12 +29,20 @@ export const ChannelViewB = ({
   channelId: string;
   guildId: string;
 }) => (
-  <ListScroller guildId={guildId} channelId={channelId}>
-    <Tempo />
-  </ListScroller>
+  <MessageScroller
+    guildId={guildId}
+    channelId={channelId}
+    defaultYAxis={{ type: "point", offset: 0, step: 20 }}
+  >
+    <ChartContainer>
+      <Tempo />
+    </ChartContainer>
+  </MessageScroller>
 );
 
 const Tempo = () => {
+  const { width, height } = useChartSize();
+
   //grab the messages we need
   const messages = useMessages();
   const analyses = useAnalyses(messages);
@@ -42,10 +55,11 @@ const Tempo = () => {
       analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
         .value
   );
-  const metricMax = Math.max(...outputs);
+  const metricMax = Math.max(
+    ...outputs.filter((output) => output !== undefined)
+  );
 
-  const numMessages = messages.length;
-
+  const data = messages.map((message, i) => [message, outputs[i]] as const);
   //console.log(metric_max)
   //outputs has the list of metric scores for each message
 
@@ -55,20 +69,14 @@ const Tempo = () => {
     top: 20,
     bottom: 20,
     right: 20,
-    height: 1000,
-    width: 1000,
+    height,
+    width,
     bar_height: bar_height,
     spacing: bar_height * 4,
   };
 
   // used to put the messages in place
-  const y = d3
-    //because we just map messages to screen locations
-    .scaleLinear()
-    //input domain scales on number of messages to display
-    .domain([0, numMessages])
-    //output domain is based on screen/window size
-    .range([padding.height - padding.top, padding.bottom]);
+  const { y } = useAxes([padding.top, height - padding.bottom]);
 
   // used for the toxicity metric
   const x = d3
@@ -76,7 +84,7 @@ const Tempo = () => {
     .scaleLinear()
     //domain is based on 'span' of metric scores we're dealing with
     //alternatively, we can use the maximum + minimum possible toxicity scores instead
-    .domain([0, metricMax])
+    .domain([0, 1])
     //output domain is again based on screen/window size
     .range([padding.left, padding.width - padding.right]);
 
@@ -111,11 +119,11 @@ const Tempo = () => {
 
     svg
       .selectAll("rect")
-      .data(outputs)
+      .data(data)
       .join("rect")
       //.attr("x", x(0))
-      .attr("width", (data) => x(data))
-      .attr("y", (data, i) => y(i) + padding.spacing)
+      .attr("width", ([, score]) => x(score))
+      .attr("y", ([message]) => y(message))
       .attr("height", padding.bar_height)
       .attr("fill", "steelblue");
   }
