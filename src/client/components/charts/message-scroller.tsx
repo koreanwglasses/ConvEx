@@ -4,8 +4,10 @@ import React, {
   Reducer,
   useContext,
   useEffect,
+  useMemo,
   useRef,
 } from "react";
+import { unstable_batchedUpdates } from "react-dom";
 import useThunkReducer, { Thunk } from "react-hook-thunk-reducer";
 import { Message } from "../../../endpoints";
 import { hasDuplicates } from "../../../utils";
@@ -137,15 +139,17 @@ const expand = (): Thunk<State, Action> => async (dispatch, getState) => {
     return;
   }
 
-  dispatch({ type: "setIsExpanding", value: true });
-  dispatch(
-    pushMessages(
-      await messageManager({ guildId, channelId }).fetchBefore(
-        messages.length && messages[messages.length - 1].id
+  unstable_batchedUpdates(async () => {
+    dispatch({ type: "setIsExpanding", value: true });
+    dispatch(
+      pushMessages(
+        await messageManager({ guildId, channelId }).fetchBefore(
+          messages.length && messages[messages.length - 1].id
+        )
       )
-    )
-  );
-  dispatch({ type: "setIsExpanding", value: false });
+    );
+    dispatch({ type: "setIsExpanding", value: false });
+  });
 };
 
 const fastForward = (): Thunk<State, Action> => async (dispatch, getState) => {
@@ -165,14 +169,19 @@ const setAutoScroll = (autoscroll: boolean): Thunk<State, Action> => (
   const state = getState();
   const { yAxis } = state;
 
-  dispatch({ type: "setAutoscroll", autoscroll });
   if (!state.autoscroll && autoscroll) {
     if (yAxis.type === "time") {
-      dispatch(refetch());
+      unstable_batchedUpdates(() => {
+        dispatch({ type: "setAutoscroll", autoscroll });
+        dispatch(refetch());
+      });
     }
     if (state.yAxis.type === "point") {
-      dispatch(fastForward());
-      dispatch(setOffset(0));
+      unstable_batchedUpdates(() => {
+        dispatch({ type: "setAutoscroll", autoscroll });
+        dispatch(setOffset(0));
+        dispatch(fastForward());
+      });
     }
   }
 };
@@ -203,11 +212,15 @@ const scrollTime = (deltaY: number): Thunk<State, Action> => (
   const timespan = maxTime - minTime;
   const newMaxTime = maxTime + deltaY * timespan * 0.001;
   if (newMaxTime >= Date.now()) {
-    dispatch(setTimeDomain([Date.now() - timespan, Date.now()]));
-    dispatch(setAutoScroll(true));
+    unstable_batchedUpdates(() => {
+      dispatch(setTimeDomain([Date.now() - timespan, Date.now()]));
+      dispatch(setAutoScroll(true));
+    });
   } else {
-    dispatch(setTimeDomain([newMaxTime - timespan, newMaxTime]));
-    dispatch(setAutoScroll(false));
+    unstable_batchedUpdates(() => {
+      dispatch(setTimeDomain([newMaxTime - timespan, newMaxTime]));
+      dispatch(setAutoScroll(false));
+    });
   }
 };
 
@@ -222,11 +235,15 @@ const scrollOffset = (deltaY: number): Thunk<State, Action> => (
 
   const newOffset = yAxis.offset - deltaY;
   if (newOffset <= 0) {
-    dispatch(setOffset(0));
-    dispatch(setAutoScroll(true));
+    unstable_batchedUpdates(() => {
+      dispatch(setOffset(0));
+      dispatch(setAutoScroll(true));
+    });
   } else {
-    dispatch(setOffset(yAxis.offset - deltaY));
-    dispatch(setAutoScroll(false));
+    unstable_batchedUpdates(() => {
+      dispatch(setOffset(yAxis.offset - deltaY));
+      dispatch(setAutoScroll(false));
+    });
   }
 
   const { y } = axes(state);
@@ -341,18 +358,16 @@ export const useAxes = (yBounds?: [top: number, bottom: number]) =>
 export const useDispatch = () => {
   const { dispatch } = useContext(MessageScrollerContext);
 
-  const createDispatches = () => ({
-    scroll: (deltaY: number) => dispatch(scroll(deltaY)),
-    scrollTimeScale: (deltaY: number, origin?: number) =>
-      dispatch(scrollTimeScale(deltaY, origin)),
-  });
-  const dispatches = useRef(createDispatches());
+  const dispatches = useMemo(
+    () => ({
+      scroll: (deltaY: number) => dispatch(scroll(deltaY)),
+      scrollTimeScale: (deltaY: number, origin?: number) =>
+        dispatch(scrollTimeScale(deltaY, origin)),
+    }),
+    [dispatch]
+  );
 
-  useEffect(() => {
-    dispatches.current = createDispatches();
-  }, [dispatch]);
-
-  return dispatches.current;
+  return dispatches;
 };
 
 ///////////////
@@ -435,8 +450,16 @@ export const MessageScroller = ({
     }
   }, [autoscroll]);
 
+  const context = useMemo(() => ({ state, dispatch }), [
+    state.yAxis,
+    state.messages,
+    state.containerHeight,
+    state.autoscroll,
+    dispatch,
+  ]);
+
   return (
-    <MessageScrollerContext.Provider value={{ state, dispatch }}>
+    <MessageScrollerContext.Provider value={context}>
       <div
         ref={containerRef}
         style={{
