@@ -96,10 +96,14 @@ const requirePermissions = (permissions: Discord.Permission[]) =>
     next();
   });
 
-app.post(routes.apiCurrentUser, (req, res) => {
-  if (req.isUnauthenticated()) return res.sendStatus(401);
-  res.send(req.user);
-});
+app.post(
+  routes.apiCurrentUser,
+  asyncHandler(async (req, res) => {
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+    const user = await Discord.fetchUser((req.user as User).id);
+    return res.send(user);
+  })
+);
 
 app.post(
   routes.apiUser,
