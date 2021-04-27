@@ -4,13 +4,30 @@ $header-height: 120px;
 $footer-height: 120px;
 
 .header {
-  background-color: base.$color-primary-0;
+  background-color: base.$neutral-4;
   height: $header-height;
   display: flex;
   justify-content: space-between;
   padding: 0 30px;
   align-items: center;
-  color: base.$color-text-on-dark-0;
+  color: base.$text-on-dark-0;
+
+  .left {
+    display: flex;
+    align-items: center;
+  }
+
+  a {
+    color: base.$text-alt;
+    text-decoration: none;
+    height: $header-height;
+    line-height: $header-height;
+    margin-left: 20px;
+  }
+
+  a:hover {
+    color: base.$primary-0;
+  }
 
   h1 {
     margin: 0;
@@ -30,11 +47,12 @@ $footer-height: 120px;
 }
 
 .content {
-  padding: 0 50px 50px 50px;
+  padding: 50px;
+  box-sizing: border-box;
   min-height: calc(100vh - #{$header-height + $footer-height});
 }
 
 .footer {
-  background-color: base.$color-primary-0;
+  background-color: base.$neutral-4;
   height: $footer-height;
 }

@@ -5,7 +5,7 @@ import { Message } from "../../../endpoints";
 import { useAwait } from "../../hooks/utility-hooks";
 import { fetchUser } from "../../models/discord";
 import styles from "../dashboard.module.scss";
-import { ColorDiv } from "../styling/color-div";
+import { ColorDiv } from "../ui/color-div";
 
 export const MessageView = ({
   message,

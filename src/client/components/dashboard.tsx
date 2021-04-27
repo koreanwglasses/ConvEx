@@ -18,8 +18,8 @@ import { ChannelViewC } from "./channel/channel-view-c";
 import { ChannelViewD } from "./channel/channel-view-d";
 import styles from "./dashboard.module.scss";
 import { Layout } from "./layout";
-import { Card } from "./styling/card";
-import { UnstyledLink } from "./styling/unstyled-link";
+import { Card } from "./ui/card";
+import { UnstyledLink } from "./ui/unstyled-link";
 
 export const Dashboard = () => {
   const { path } = useRouteMatch();
