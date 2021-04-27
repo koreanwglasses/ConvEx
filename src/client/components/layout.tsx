@@ -1,6 +1,7 @@
 import {
   AppBar,
   Avatar,
+  Box,
   Button,
   Container,
   createMuiTheme,
@@ -8,7 +9,6 @@ import {
   makeStyles,
   ThemeProvider,
   Toolbar,
-  Typography,
 } from "@material-ui/core";
 import { Skeleton } from "@material-ui/lab";
 import React from "react";
@@ -18,12 +18,25 @@ import { resolveEndpoint } from "../../utils";
 import { useAPI } from "../hooks/use-api";
 import { UnstyledLink } from "./ui/unstyled-link";
 
-const theme = createMuiTheme({ palette: { type: "dark" } });
+const theme = createMuiTheme({
+  palette: {
+    type: "dark",
+    primary: {
+      main: "#2E303E",
+    },
+    secondary: {
+      main: "#F43E5C",
+      contrastText: "#fff",
+    },
+    background: { default: "#232530" },
+  },
+});
 
 const useStyles = makeStyles((theme) => ({
   toolbar: {},
   toolbarTitle: {
     flexGrow: 1,
+    fontSize: 36,
   },
   button: {
     margin: theme.spacing(1, 1),
@@ -37,7 +50,9 @@ export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
   <ThemeProvider theme={theme}>
     <CssBaseline />
     <Header />
-    <Container>{children}</Container>
+    <Container>
+      <main>{children}</main>
+    </Container>
     <Footer />
   </ThemeProvider>
 );
@@ -48,11 +63,16 @@ const Header = () => {
     <>
       <AppBar>
         <Toolbar className={classes.toolbar}>
-          <Typography variant={"h4"} className={classes.toolbarTitle}>
+          <div className={classes.toolbarTitle}>
             <UnstyledLink to={"/"}>
-              <b>CON</b>CORD
+              <Box fontWeight={800} component="span">
+                CON
+              </Box>
+              <Box fontWeight={"fontWeightLight"} component="span">
+                CORD
+              </Box>
             </UnstyledLink>
-          </Typography>
+          </div>
           <UserNav />
         </Toolbar>
       </AppBar>
