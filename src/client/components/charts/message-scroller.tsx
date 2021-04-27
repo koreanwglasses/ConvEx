@@ -27,7 +27,7 @@ type State = {
 };
 type Action =
   | { type: "setMessages"; messages: Message[] }
-  | { type: "pushMessages"; messages: Message[] }
+  | { type: "unshiftMessages"; messages: Message[] }
   | { type: "setOffset"; offset: number }
   | { type: "setTimeDomain"; domain: [number, number] }
   | { type: "setAutoscroll"; autoscroll: boolean }
@@ -39,8 +39,8 @@ const reducer: Reducer<State, Action> = (state, action) => {
     case "setMessages":
       return { ...state, messages: action.messages };
 
-    case "pushMessages":
-      return { ...state, messages: [...state.messages, ...action.messages] };
+    case "unshiftMessages":
+      return { ...state, messages: [...action.messages, ...state.messages] };
 
     case "setOffset":
       if (yAxis.type != "point")
@@ -68,8 +68,8 @@ const setMessages = (messages: Message[]): Action => ({
   messages,
 });
 
-const pushMessages = (messages: Message[]): Action => ({
-  type: "pushMessages",
+const unshiftMessages = (messages: Message[]): Action => ({
+  type: "unshiftMessages",
   messages,
 });
 
@@ -103,7 +103,7 @@ const expand = (): Thunk<State, Action> => async (dispatch, getState) => {
     throw new Error('expand should only be used with "point" mode');
 
   dispatch(
-    pushMessages(
+    unshiftMessages(
       await messageManager({ guildId, channelId }).fetchBefore(
         messages?.length && messages[messages.length - 1].id
       )
@@ -181,7 +181,15 @@ const scrollOffset = (deltaY: number): Thunk<State, Action> => (
   const { yAxis } = getState();
   if (yAxis.type !== "point")
     throw new Error('scrollOffset should only be used with "point" mode');
-  dispatch(setOffset(Math.max(yAxis.offset - deltaY, 0)));
+
+  const newOffset = yAxis.offset - deltaY;
+  if (newOffset <= 0) {
+    dispatch(setOffset(0));
+    dispatch(setAutoScroll(true));
+  } else {
+    dispatch(setOffset(yAxis.offset - deltaY));
+    dispatch(setAutoScroll(false));
+  }
 };
 
 const scroll = (deltaY: number): Thunk<State, Action> => (
@@ -376,7 +384,7 @@ export const MessageScroller = ({
       const subscription = Sockets.subscribeToMessages(
         { guildId, channelId },
         (message) => {
-          dispatch(pushMessages([message]));
+          dispatch(unshiftMessages([message]));
         }
       );
       return () => subscription.unsubscribe();
