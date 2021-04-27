@@ -23,13 +23,15 @@ type State = {
     | { type: "point"; offset: number; step: number };
   messages: Message[];
   autoscroll: boolean;
+  containerHeight: number;
 };
 type Action =
   | { type: "setMessages"; messages: Message[] }
   | { type: "pushMessages"; messages: Message[] }
   | { type: "setOffset"; offset: number }
   | { type: "setTimeDomain"; domain: [number, number] }
-  | { type: "setAutoscroll"; autoscroll: boolean };
+  | { type: "setAutoscroll"; autoscroll: boolean }
+  | { type: "setContainerHeight"; height: number };
 const reducer: Reducer<State, Action> = (state, action) => {
   const { yAxis } = state;
 
@@ -53,6 +55,9 @@ const reducer: Reducer<State, Action> = (state, action) => {
     case "setAutoscroll":
       return { ...state, autoscroll: action.autoscroll };
 
+    case "setContainerHeight":
+      return { ...state, containerHeight: action.height };
+
     default:
       return state;
   }
@@ -69,6 +74,11 @@ const pushMessages = (messages: Message[]): Action => ({
 });
 
 const setOffset = (offset: number): Action => ({ type: "setOffset", offset });
+
+const setContainerHeight = (height: number): Action => ({
+  type: "setContainerHeight",
+  height,
+});
 
 const refetch = (): Thunk<State, Action> => async (dispatch, getState) => {
   const { guildId, channelId, yAxis } = getState();
@@ -256,8 +266,23 @@ const MessageScrollerContext = createContext<{
   dispatch: React.Dispatch<Action | Thunk<State, Action>>;
 }>(undefined);
 
-export const useMessages = () =>
-  useContext(MessageScrollerContext).state.messages;
+export const useMessages = () => {
+  const context = useContext(MessageScrollerContext);
+
+  const { yAxis, containerHeight, messages } = context.state;
+  if (yAxis.type === "point") {
+    /* Improve performance by filtering out messages that would be offscreen */
+    const { y } = axes(context.state, [0, containerHeight]);
+    return y
+      ? messages.filter((message) => {
+          const y_ = y(message);
+          return -yAxis.step < y_ && y_ < containerHeight + yAxis.step;
+        })
+      : [];
+  }
+
+  return messages;
+};
 
 export const useAxes = (yBounds?: [top: number, bottom: number]) =>
   axes(useContext(MessageScrollerContext).state, yBounds);
@@ -308,6 +333,7 @@ export const MessageScroller = ({
     yAxis: defaultYAxis,
     messages: [],
     autoscroll: undefined,
+    containerHeight: undefined,
   });
 
   const { autoscroll, yAxis } = state;
@@ -319,6 +345,17 @@ export const MessageScroller = ({
   /* Start with autoscroll */
   useEffect(() => {
     dispatch(setAutoScroll(true));
+  }, []);
+
+  /* Keep track of height */
+  useEffect(() => {
+    const updateHeight = () =>
+      dispatch(setContainerHeight(containerRef.current.clientHeight));
+
+    updateHeight();
+
+    addEventListener("resize", updateHeight);
+    return () => removeEventListener("resize", updateHeight);
   }, []);
 
   /* Handle autoscrolling in time mode */
@@ -350,7 +387,12 @@ export const MessageScroller = ({
     <MessageScrollerContext.Provider value={{ state, dispatch }}>
       <div
         ref={containerRef}
-        style={{ width: "100%", height: "75vh", display: "flex" }}
+        style={{
+          width: "100%",
+          height: "75vh",
+          display: "flex",
+          position: "relative",
+        }}
       >
         {children}
       </div>
