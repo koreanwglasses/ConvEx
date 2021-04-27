@@ -91,24 +91,28 @@ const Tempo = () => {
   const svgRef = useRef<SVGSVGElement>();
   const selections = useRef<{
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
-    //yAxisG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xAxisG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xAxisLabelText: d3.Selection<SVGTextElement, unknown, null, undefined>;
   }>();
 
   useEffect(() => {
     /* Initialization. Runs once */
     const svg = d3.select(svgRef.current);
-    selections.current = { svg };
+    const xAxisG = svg.append("g");
+
+    const xAxisLabelText = svg.append("text");
+
+    selections.current = { svg, xAxisG, xAxisLabelText };
   }, []);
 
   if (selections.current && messages.length > 0) {
-    const { svg } = selections.current;
-    svg
-      .append("g")
+    const { svg, xAxisG, xAxisLabelText } = selections.current;
+
+    xAxisG
       .call(d3.axisBottom(x))
       .attr("transform", `translate(${padding.left}, ${padding.bottom})`); // TODO xTranslation
 
-    svg
-      .append("text")
+    xAxisLabelText
       .attr("font-size", 12)
       .attr("font-weight", "bold")
       .attr("font-family", "sans-serif")
