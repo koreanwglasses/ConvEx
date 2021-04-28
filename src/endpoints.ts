@@ -17,6 +17,7 @@ const apiRoutes = {
 
 export const routes = {
   auth: "/auth",
+  invite: "/invite",
   authCallback: "/return",
   ...apiRoutes,
 } as const;

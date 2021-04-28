@@ -23,6 +23,8 @@ export const rootURL = () =>
 export const resolveEndpoint = (path: string) =>
   config.mode === "remote-development" ? `${rootURL()}${path}` : path;
 
+export const absoluteUrl = (path: string) => `${rootURL()}${path}`;
+
 export type ValueOf<T> = T[keyof T];
 
 export const cached = <S extends unknown[], T>(func: (...args: S) => T) => {

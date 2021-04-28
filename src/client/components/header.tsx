@@ -81,7 +81,13 @@ const UserNav = () => {
       )}
 
       {(err || user) && (
-        <Button variant="outlined" className={classes.button}>
+        <Button
+          variant="outlined"
+          className={classes.button}
+          href={resolveEndpoint(routes.invite)}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           Add to Server
         </Button>
       )}
