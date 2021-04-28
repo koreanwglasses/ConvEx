@@ -16,7 +16,11 @@ export const ChannelViewA = ({
   channelId: string;
   guildId: string;
 }) => (
-  <MessageScroller guildId={guildId} channelId={channelId}>
+  <MessageScroller
+    guildId={guildId}
+    channelId={channelId}
+    defaultYAxis={{ type: "point", offset: 0, step: 20 }}
+  >
     <YAxis />
     <ChartContainer>
       <Chart />
@@ -59,8 +63,9 @@ const Chart = () => {
 
     svg
       .selectAll("rect")
-      .data(data)
+      .data(data, ([message]) => message.id)
       .join("rect")
+      // .transition()
       .attr("x", x(0))
       .attr(
         "width",

@@ -6,6 +6,7 @@ import {
   useAxes,
   useMessages,
 } from "../charts/message-scroller";
+import { YAxis } from "../charts/y-axis";
 import { MessageView } from "../message/message-view";
 import styles from "./channel-list-view.module.scss";
 
@@ -22,6 +23,7 @@ export const ChannelListView = ({
     channelId={channelId}
     defaultYAxis={{ type: "point", offset: 0, step: 80 }}
   >
+    <YAxis />
     <ChartContainer>
       <MessageList />
     </ChartContainer>
