@@ -1,9 +1,4 @@
-import {
-  Container,
-  createMuiTheme,
-  CssBaseline,
-  ThemeProvider,
-} from "@material-ui/core";
+import { createMuiTheme, CssBaseline, ThemeProvider } from "@material-ui/core";
 import React from "react";
 import { Header } from "./header";
 
@@ -25,9 +20,7 @@ export const Layout = ({ children }: React.PropsWithChildren<unknown>) => (
   <ThemeProvider theme={theme}>
     <CssBaseline />
     <Header />
-    <Container>
-      <main>{children}</main>
-    </Container>
+    <main>{children}</main>
     <Footer />
   </ThemeProvider>
 );

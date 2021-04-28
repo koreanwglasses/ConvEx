@@ -86,35 +86,40 @@ const UserNav = () => {
         </Button>
       )}
 
-      {err && (
-        <Button
-          color="secondary"
-          variant="contained"
-          href={resolveEndpoint(routes.auth)}
-          className={classes.button}
-        >
-          Login with Discord
-        </Button>
-      )}
+      {err && <LoginButton />}
 
       {user && (
-        <Button
-          color="secondary"
-          variant="contained"
-          component={RouterLink}
-          to={"/dashboard"}
-          className={classes.button}
-        >
-          Dashboard
-        </Button>
-      )}
-      {user && (
-        <Avatar
-          alt={`${user.username}#${user.discriminator}`}
-          src={user.avatarURL}
-          className={classes.avatar}
-        ></Avatar>
+        <>
+          <Button
+            color="secondary"
+            variant="contained"
+            component={RouterLink}
+            to={"/dashboard"}
+            className={classes.button}
+          >
+            Dashboard
+          </Button>
+          <Avatar
+            alt={`${user.username}#${user.discriminator}`}
+            src={user.avatarURL}
+            className={classes.avatar}
+          ></Avatar>
+        </>
       )}
     </>
+  );
+};
+
+export const LoginButton = () => {
+  const classes = useStyles();
+  return (
+    <Button
+      color="secondary"
+      variant="contained"
+      href={resolveEndpoint(routes.auth)}
+      className={classes.button}
+    >
+      Login with Discord
+    </Button>
   );
 };
