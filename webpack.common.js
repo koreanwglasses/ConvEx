@@ -45,6 +45,10 @@ module.exports = {
     new HtmlWebpackPlugin({
       inject: false,
       template: require("html-webpack-template"),
+      title: "Concord",
+      links: [
+        "https://fonts.googleapis.com/css?family=Roboto:200,300,400,500,700&display=swap",
+      ],
 
       appMountId: "react-root",
 
