@@ -43,7 +43,7 @@ type Action =
   | { type: "setIsExpanding"; value: boolean }
   | { type: "setYAxisType"; value: State["yAxis"]["type"] };
 const reducer: Reducer<State, Action> = (state, action) => {
-  const { yAxis, messages } = state;
+  const { yAxis, messages, containerHeight } = state;
 
   switch (action.type) {
     case "setMessages":
@@ -88,10 +88,29 @@ const reducer: Reducer<State, Action> = (state, action) => {
       return { ...state, isExpanding: action.value };
 
     case "setYAxisType":
-      return {
-        ...state,
-        yAxis: { ...yAxis, type: action.value } as State["yAxis"],
-      };
+      if (yAxis.type === action.value) return state;
+      if (yAxis.type === "point" && action.value === "time") {
+        const i = (containerHeight / 2 + yAxis.offset) / yAxis.step - 1;
+        const centerTimestamp =
+          messages[Math.round(i)]?.createdTimestamp ?? Date.now();
+        const timespan = ((domain) =>
+          domain ? domain[1] - domain[0] : 1000 * 60 * 60)(
+          ((yAxis as State["yAxis"]) as {
+            type: "time";
+            domain: [min: number, max: number];
+          }).domain
+        );
+        const newMaxTime = Math.min(centerTimestamp + timespan / 2, Date.now());
+        return {
+          ...state,
+          yAxis: {
+            ...yAxis,
+            type: "time",
+            domain: [newMaxTime - timespan, newMaxTime],
+          } as State["yAxis"],
+          autoscroll: newMaxTime + timespan / 2 >= Date.now(),
+        };
+      }
 
     default:
       return state;
@@ -120,10 +139,17 @@ const setContainerHeight = (height: number): Action => ({
   height,
 });
 
-const setYAxisType = (type: State["yAxis"]["type"]): Action => ({
-  type: "setYAxisType",
-  value: type,
-});
+const setYAxisType = (type: State["yAxis"]["type"]): Thunk<State, Action> => (
+  dispatch
+) => {
+  unstable_batchedUpdates(() => {
+    dispatch({
+      type: "setYAxisType",
+      value: type,
+    });
+    if (type === "time") dispatch(refetch());
+  });
+};
 
 const refetch = (): Thunk<State, Action> => async (dispatch, getState) => {
   const { guildId, channelId, yAxis } = getState();
@@ -475,7 +501,7 @@ export const MessageScroller = ({
 
   return (
     <MessageScrollerContext.Provider value={context}>
-      <Toolbar/>
+      <Toolbar />
       <div
         ref={containerRef}
         style={{
