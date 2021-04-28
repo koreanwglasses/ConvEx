@@ -48,12 +48,12 @@
   }
 
   &-time {
-    color: base.$color-text-on-dark-1;
+    color: base.$text-on-dark-1;
     font-size: smaller;
   }
 
   .light &-time {
-    color: base.$color-text-on-light-1;
+    color: base.$text-on-light-1;
   }
 
   .censored {
@@ -65,5 +65,5 @@
 }
 
 .light {
-  color: base.$color-text-on-light-0;
+  color: base.$text-on-light-0;
 }

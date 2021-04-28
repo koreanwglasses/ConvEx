@@ -1,18 +1,24 @@
-$color-primary-0: #44443e; // Main Primary color */
-$color-primary-1: #8b8a73;
-$color-primary-2: #626154;
-$color-primary-3: #22201a;
-$color-primary-4: #0e0d09;
+$neutral-0: #16161c; // Main Primary color */
+$neutral-1: #1a1c23;
+$neutral-2: #1c1e26;
+$neutral-3: #232530;
+$neutral-4: #2e303e;
+$neutral-5: #6c6f93;
+
+$primary-0: #e9436f;
+$primary-1: #e95379;
+$primary-2: #f43e5c;
+$secondary-0: #09f7a0;
+$secondary-1: #27d796;
+$secondary-2: #21bfc2;
+$secondary-3: #fab28e;
 
 $color-complement-0: #543575; // Main Complement color */
-$color-complement-1: #724f99;
-$color-complement-2: #68478b;
-$color-complement-3: #472c64;
-$color-complement-4: #3d2458;
 
-$background: $color-primary-3;
+$text: white;
+$text-alt: rgb(202, 202, 202);
 
-$color-text-on-dark-0: white;
-$color-text-on-dark-1: rgb(202, 202, 202);
-$color-text-on-light-0: black;
-$color-text-on-light-1: rgb(119, 119, 119);
+$text-on-dark-0: white;
+$text-on-dark-1: rgb(202, 202, 202);
+$text-on-light-0: black;
+$text-on-light-1: rgb(119, 119, 119);

@@ -30,4 +30,7 @@ export class APIError extends Error {
   get isUnauthorized() {
     return this.response.status === 401;
   }
+  get isForbidden() {
+    return this.response.status === 403;
+  }
 }

@@ -69,7 +69,10 @@ export type ResponseBody = {
 export type User = Pick<Discord.User, "username" | "discriminator"> & {
   avatarURL: "string";
 };
-export type Guild = Pick<Discord.Guild, "name" | "id"> & { channels: string[] };
+export type Guild = Pick<Discord.Guild, "name" | "id"> & {
+  channels: string[];
+  iconURL: string;
+};
 export type Channel = Pick<Discord.GuildChannel, "type" | "id" | "name">;
 export type Message = Pick<
   Discord.Message,
