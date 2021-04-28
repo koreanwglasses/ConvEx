@@ -13,7 +13,7 @@ import { Message } from "../../../endpoints";
 import { hasDuplicates, minBy } from "../../../utils";
 import { messageManager } from "../../models/discord";
 import * as Sockets from "../../sockets";
-import { Toolbar } from "./toolbar";
+import { MessageScrollerToolbar } from "./toolbar";
 
 const DEBUG = true;
 
@@ -591,7 +591,7 @@ export const MessageScroller = ({
 
   return (
     <MessageScrollerContext.Provider value={context}>
-      <Toolbar />
+      <MessageScrollerToolbar />
       <div
         ref={containerRef}
         style={{
@@ -599,6 +599,7 @@ export const MessageScroller = ({
           height: "75vh",
           display: "flex",
           position: "relative",
+          alignItems: "stretch",
         }}
       >
         {children}

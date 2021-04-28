@@ -68,7 +68,7 @@ export const ChartContainer = React.forwardRef(
       >
         <div
           ref={mergeRefs([containerRef, ref])}
-          style={{ flexGrow: 1, height: "100%", ...style }}
+          style={{ height: "100%", width: "300px", flexGrow: 1, ...style }}
           {...divProps}
         >
           {children}

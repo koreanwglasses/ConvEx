@@ -1,5 +1,6 @@
 import React from "react";
 import { useAnalyses } from "../../hooks/use-analyses";
+import { AnalysesBars } from "../charts/analysis-bars";
 import { ChartContainer, useChartSize } from "../charts/chart-container";
 import {
   MessageScroller,
@@ -27,6 +28,8 @@ export const ChannelListView = ({
     <ChartContainer>
       <MessageList />
     </ChartContainer>
+    <YAxis compact />
+    <AnalysesBars />
   </MessageScroller>
 );
 
@@ -51,7 +54,7 @@ const MessageList = () => {
           message={message}
           analysis={analyses?.get(message.id)}
           style={{
-            top: y?.(message),
+            top: y?.(message) - 40,
             position: "absolute",
             width,
             height: messageHeight,
