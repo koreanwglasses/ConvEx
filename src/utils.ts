@@ -78,3 +78,10 @@ export const pick = <T extends Record<string, unknown>, K extends keyof T>(
 
 export const hasDuplicates = (array: unknown[]) =>
   new Set(array).size !== array.length;
+
+export const minBy = <T>(arr: T[], key: (value: T) => unknown) =>
+  arr.length === 0
+    ? undefined
+    : arr.length === 1
+    ? arr[0]
+    : arr.reduce((a, b) => (key(b) < key(a) ? b : a));
