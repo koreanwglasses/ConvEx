@@ -16,7 +16,6 @@ import { useAPI } from "../../hooks/use-api";
 import { useAwaitAll } from "../../hooks/utility-hooks";
 import { fetchChannel } from "../../models/discord";
 import { ChannelListView } from "../channel/channel-list-view-alt";
-import styles from "../dashboard.module.scss";
 import { UnstyledLink } from "../ui/unstyled-link";
 
 const useStyles = makeStyles((theme) => ({
@@ -125,19 +124,15 @@ const CompactChannelView = ({
 }) => {
   const classes = useStyles();
   return (
-    <div className={styles.channelView}>
-      <UnstyledLink to={(location) => `${location.pathname}/${channel.id}`}>
-        <Card className={classes.channelCard}>
-          <CardActionArea>
-            <CardContent>
-              <Typography variant="h6">#{channel.name}</Typography>
-            </CardContent>
-          </CardActionArea>
-          {/* <CardContent> */}
-          <ChannelListView guildId={guild.id} channelId={channel.id} />
-          {/* </CardContent> */}
-        </Card>
-      </UnstyledLink>
-    </div>
+    <UnstyledLink to={(location) => `${location.pathname}/${channel.id}`}>
+      <Card className={classes.channelCard}>
+        <CardActionArea>
+          <CardContent>
+            <Typography variant="h6">#{channel.name}</Typography>
+          </CardContent>
+        </CardActionArea>
+        <ChannelListView guildId={guild.id} channelId={channel.id} />
+      </Card>
+    </UnstyledLink>
   );
 };
