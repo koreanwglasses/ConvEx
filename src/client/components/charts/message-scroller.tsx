@@ -591,7 +591,7 @@ export const MessageScroller = ({
 
   return (
     <MessageScrollerContext.Provider value={context}>
-      {/* <Toolbar /> */}
+      <Toolbar />
       <div
         ref={containerRef}
         style={{
