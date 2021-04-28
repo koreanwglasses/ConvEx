@@ -55,13 +55,13 @@ export const init = () => {
         channelId: string;
       }) => {
         if (
-          !(await Discord.hasPermission(
+          !(await Discord.hasPermissions(
             {
               userId: socket.request.user.id,
               guildId,
               channelId,
             },
-            "VIEW_CHANNEL"
+            ["MANAGE_GUILD", "VIEW_CHANNEL"]
           ))
         ) {
           return socket.emit("error", "Forbidden");

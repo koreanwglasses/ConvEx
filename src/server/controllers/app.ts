@@ -8,6 +8,7 @@ import { resolve } from "path";
 import * as config from "../../config";
 import { RequestBody, routes } from "../../endpoints";
 import { asyncFilter } from "../../utils";
+import * as localConfig from "../config.local";
 import { sessionMiddleware } from "../middlewares/sessions";
 import * as Discord from "../models/discord";
 import * as Perspective from "../models/perspective";
@@ -96,10 +97,19 @@ const requirePermissions = (permissions: Discord.Permission[]) =>
     next();
   });
 
-app.post(routes.apiCurrentUser, (req, res) => {
-  if (req.isUnauthenticated()) return res.sendStatus(401);
-  res.send(req.user);
+app.get(routes.invite, (req, res) => {
+  const url = `https://discord.com/api/oauth2/authorize?client_id=${localConfig.clientID}&permissions=66560&scope=bot`;
+  return res.redirect(url);
 });
+
+app.post(
+  routes.apiCurrentUser,
+  asyncHandler(async (req, res) => {
+    if (req.isUnauthenticated()) return res.sendStatus(401);
+    const user = await Discord.fetchUser((req.user as User).id);
+    return res.send(user);
+  })
+);
 
 app.post(
   routes.apiUser,
@@ -122,7 +132,7 @@ app.post(
           userId,
           guildId,
         },
-        "IS_MEMBER"
+        "MANAGE_GUILD"
       )
     );
 
@@ -132,7 +142,7 @@ app.post(
 
 app.post(
   routes.apiFetchGuild,
-  requirePermission("IS_MEMBER"),
+  requirePermission("MANAGE_GUILD"),
   asyncHandler(async (req, res) => {
     const { guildId } = req.body;
     const guild = await Discord.fetchGuild(guildId);
@@ -142,7 +152,7 @@ app.post(
 
 app.post(
   routes.apiFetchChannel,
-  requirePermission("VIEW_CHANNEL"),
+  requirePermissions(["MANAGE_GUILD", "VIEW_CHANNEL"]),
   asyncHandler(async (req, res) => {
     const { guildId, channelId } = req.body;
 
@@ -155,7 +165,7 @@ app.post(
 
 app.post(
   routes.apiListMessages,
-  requirePermissions(["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]),
+  requirePermissions(["MANAGE_GUILD", "VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]),
   asyncHandler(async (req, res) => {
     const {
       guildId,
@@ -181,7 +191,7 @@ app.post(
 
 app.post(
   routes.apiFetchMessage,
-  requirePermissions(["VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]),
+  requirePermissions(["MANAGE_GUILD", "VIEW_CHANNEL", "READ_MESSAGE_HISTORY"]),
   asyncHandler(async (req, res) => {
     const {
       guildId,
@@ -216,6 +226,7 @@ app.post(
         requests.map(async ({ guildId, channelId, messageId }) => {
           if (
             !(await Discord.hasPermissions({ userId, guildId, channelId }, [
+              "MANAGE_GUILD",
               "VIEW_CHANNEL",
               "READ_MESSAGE_HISTORY",
             ]))

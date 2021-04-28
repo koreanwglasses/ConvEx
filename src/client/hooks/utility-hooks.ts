@@ -38,7 +38,7 @@ export const useAwaitAll = <T = unknown>(
   return result;
 };
 
-export const useAwaitTo = <T>(
+export const useAwaitTo = <T, E = Error>(
   callback: () => Promise<T>,
   deps: React.DependencyList = [],
   initial?: T
@@ -46,7 +46,7 @@ export const useAwaitTo = <T>(
   useAwait(
     () => {
       const promise = callback();
-      if (promise) return to(promise);
+      if (promise) return to<T, E>(promise);
     },
     deps,
     [null, initial]

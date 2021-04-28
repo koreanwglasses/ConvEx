@@ -1,37 +1,5 @@
 @use "base";
 
-.dashboard {
-  left: auto;
-}
-
-.guild-selector {
-  left: auto;
-}
-
-.guild-dashboard {
-  left: auto;
-  &-channels-container {
-    display: flex;
-    justify-content: space-around;
-  }
-}
-
-.channel-view {
-  width: 400px;
-  $height: 75vh;
-
-  &-content-wrapper {
-    min-height: 600px;
-    height: $height;
-  }
-
-  &-content-container {
-    display: flex;
-    flex-direction: column-reverse;
-    min-height: $height;
-  }
-}
-
 .message {
   padding: 10px;
   display: flex;
@@ -48,12 +16,12 @@
   }
 
   &-time {
-    color: base.$color-text-on-dark-1;
+    color: base.$text-on-dark-1;
     font-size: smaller;
   }
 
   .light &-time {
-    color: base.$color-text-on-light-1;
+    color: base.$text-on-light-1;
   }
 
   .censored {
@@ -65,5 +33,5 @@
 }
 
 .light {
-  color: base.$color-text-on-light-0;
+  color: base.$text-on-light-0;
 }

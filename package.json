@@ -11,6 +11,8 @@
     "remote-dev:client": "cross-env NODE_ENV=remote-development webpack serve --config webpack.dev.js --history-api-fallback"
   },
   "dependencies": {
+    "@material-ui/core": "^4.11.4",
+    "@material-ui/lab": "^4.0.0-alpha.58",
     "@types/d3": "^6.3.0",
     "@types/d3-color": "^2.0.1",
     "@types/d3-scale-chromatic": "^2.0.0",
