@@ -522,10 +522,12 @@ export const MessageScroller = ({
     type: "time",
     domain: [Date.now() - DEFAULT_TIMESPAN, Date.now()],
   },
+  showToolbar = false,
 }: React.PropsWithChildren<{
   channelId: string;
   guildId: string;
   defaultYAxis?: State["yAxis"];
+  showToolbar?: boolean;
 }>) => {
   const containerRef = useRef<HTMLDivElement>();
 
@@ -602,7 +604,7 @@ export const MessageScroller = ({
 
   return (
     <MessageScrollerContext.Provider value={context}>
-      <MessageScrollerToolbar />
+      {showToolbar && <MessageScrollerToolbar />}
       <div
         ref={containerRef}
         style={{

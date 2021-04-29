@@ -16,6 +16,7 @@ export const ChannelListView = ({
     guildId={guildId}
     channelId={channelId}
     defaultYAxis={{ type: "point", offset: 0, step: 65 }}
+    showToolbar
   >
     <YAxis />
     <MessageList />
