@@ -18,7 +18,7 @@ export const MessageScrollerToolbar = () => {
         onClick={() => setYAxisType(yAxis.type === "time" ? "point" : "time")}
         size="small"
       >
-        {yAxis.type === "time" ? (
+        {yAxis.type === "point" ? (
           <UnfoldLessOutlinedIcon />
         ) : (
           <UnfoldMoreOutlinedIcon />
