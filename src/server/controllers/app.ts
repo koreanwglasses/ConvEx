@@ -161,8 +161,7 @@ app.post(
   asyncHandler(async (req, res) => {
     const { guildId, channelId } = req.body;
 
-    const guild = await Discord.fetchGuild(guildId);
-    const channel = guild.channels.resolve(channelId);
+    const channel = Discord.fetchChannel(guildId, channelId);
 
     return res.send(channel);
   })

@@ -83,6 +83,15 @@ export const listGuilds = () => client.guilds.cache.array();
 export const fetchGuild = (guildId: string) => client.guilds.fetch(guildId);
 
 //////////////
+// Channels //
+//////////////
+
+export const fetchChannel = async (guildId: string, channelId: string) => {
+  const guild = await client.guilds.fetch(guildId);
+  return guild.channels.resolve(channelId);
+};
+
+//////////////
 // Messages //
 //////////////
 
