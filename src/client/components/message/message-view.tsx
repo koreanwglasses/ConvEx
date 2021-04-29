@@ -14,7 +14,7 @@ const useStyles = makeStyles((theme) => ({
   root: {
     padding: theme.spacing(1),
     display: "flex",
-    maxHeight: 60,
+    maxHeight: 56,
     height: "fit-content",
     transition: "max-height 300ms",
     overflow: "hidden",
