@@ -7,7 +7,6 @@ import {
   makeStyles,
   Menu,
   MenuItem,
-  Link,
   Toolbar,
 } from "@material-ui/core";
 import { Skeleton } from "@material-ui/lab";
