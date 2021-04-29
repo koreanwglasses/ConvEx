@@ -19,6 +19,7 @@ export const routes = {
   auth: "/auth",
   invite: "/invite",
   authCallback: "/return",
+  logout: "/logout",
   ...apiRoutes,
 } as const;
 

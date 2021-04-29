@@ -3,11 +3,15 @@ import {
   Avatar,
   Box,
   Button,
+  IconButton,
   makeStyles,
+  Menu,
+  MenuItem,
+  Link,
   Toolbar,
 } from "@material-ui/core";
 import { Skeleton } from "@material-ui/lab";
-import React from "react";
+import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 import { routes } from "../../endpoints";
 import { resolveEndpoint } from "../../utils";
@@ -55,6 +59,7 @@ const Title = () => {
 const UserNav = () => {
   const classes = useStyles();
   const [err, user] = useAPI(routes.apiCurrentUser);
+  const [menuAnchor, setMenuAnchor] = useState<Element>(null);
   return (
     <>
       {!err && !user && (
@@ -105,11 +110,26 @@ const UserNav = () => {
           >
             Dashboard
           </Button>
-          <Avatar
-            alt={`${user.username}#${user.discriminator}`}
-            src={user.avatarURL}
-            className={classes.avatar}
-          ></Avatar>
+          <IconButton
+            onClick={(e) => setMenuAnchor(e.currentTarget)}
+            size="small"
+          >
+            <Avatar
+              alt={`${user.username}#${user.discriminator}`}
+              src={user.avatarURL}
+              className={classes.avatar}
+            ></Avatar>
+          </IconButton>
+          <Menu
+            anchorEl={menuAnchor}
+            open={!!menuAnchor}
+            keepMounted
+            onClose={() => setMenuAnchor(null)}
+          >
+            <MenuItem component={"a"} href={resolveEndpoint(routes.logout)}>
+              Logout
+            </MenuItem>
+          </Menu>
         </>
       )}
     </>

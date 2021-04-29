@@ -59,6 +59,11 @@ app.get(
   }
 );
 
+app.get(routes.logout, (req, res) => {
+  req.logout();
+  res.redirect("/");
+});
+
 /////////////
 // Discord //
 /////////////
