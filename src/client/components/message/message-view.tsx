@@ -19,7 +19,7 @@ const useStyles = makeStyles((theme) => ({
     transition: "max-height 300ms",
     overflow: "hidden",
     boxSizing: "border-box",
-    borderRadius: 30,
+    borderRadius: 28,
     "&:hover": {
       maxHeight: 500,
       zIndex: 1,

@@ -37,6 +37,7 @@ type State = {
   containerHeight: number;
   isExpanding: boolean;
   transitionAlpha: number;
+  transitionPivot?: string;
 };
 type Action =
   | { type: "setMessages"; messages: Message[] }
@@ -139,6 +140,7 @@ const reducer: Reducer<State, Action> = (state, action) => {
           ...state,
           yAxis: { ...yAxis, type: "point", step, offset },
           messages: newMessages,
+          transitionPivot: action.pivot,
         };
       }
       break;
@@ -377,7 +379,7 @@ const scrollTimeScale = (
 /////////////
 
 const axes = (
-  { yAxis, messages, containerHeight, transitionAlpha }: State,
+  { yAxis, messages, containerHeight, transitionAlpha, transitionPivot }: State,
   yBounds: [top: number, bottom: number] = [0, containerHeight]
 ) => {
   /* TODO: Optimize with useMemo */
@@ -390,7 +392,7 @@ const axes = (
       !isNaN(yBounds[0]) && !isNaN(yBounds[1])
         ? (message: Message) => yScale(message.createdTimestamp)
         : undefined;
-    return { yAxis, yScale, y, transitionAlpha };
+    return { yScale, y, yAxis, transitionAlpha, transitionPivot };
   };
   const point = () => {
     const yScale =
@@ -407,14 +409,21 @@ const axes = (
       !isNaN(yBounds[0]) && !isNaN(yBounds[1])
         ? (message: Message) => yScale(message.id)
         : undefined;
-    return { yAxis, yScale, y, transitionAlpha };
+    return {
+      yScale,
+      y,
+
+      yAxis,
+      transitionAlpha,
+      transitionPivot,
+    };
   };
 
   /* TODO: Optimize and clean up transition code */
   if (yAxis.type === "time") {
     if (transitionAlpha < 1) {
       const { y: yPoint } = point();
-      const { yAxis, yScale, y: yTime } = time();
+      const { yScale, y: yTime } = time();
       return {
         yAxis,
         yScale,
@@ -422,6 +431,7 @@ const axes = (
           (1 - transitionAlpha) * yPoint(message) +
           transitionAlpha * yTime(message),
         transitionAlpha,
+        transitionPivot,
       };
     } else {
       return time();
@@ -429,7 +439,7 @@ const axes = (
   }
   if (yAxis.type === "point") {
     if (transitionAlpha < 1) {
-      const { yAxis, yScale, y: yPoint } = point();
+      const { yScale, y: yPoint } = point();
       const { y: yTime } = time();
       return {
         yAxis,
@@ -438,6 +448,7 @@ const axes = (
           (1 - transitionAlpha) * yTime(message) +
           transitionAlpha * yPoint(message),
         transitionAlpha,
+        transitionPivot,
       };
     } else {
       return point();
