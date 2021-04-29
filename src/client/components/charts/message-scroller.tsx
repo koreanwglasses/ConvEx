@@ -245,16 +245,13 @@ const setAutoScroll = (autoscroll: boolean): Thunk<State, Action> => (
   const state = getState();
   const { yAxis } = state;
 
+  dispatch({ type: "setAutoscroll", autoscroll });
   if (!state.autoscroll && autoscroll) {
     if (yAxis.type === "time") {
-      unstable_batchedUpdates(() => {
-        dispatch({ type: "setAutoscroll", autoscroll });
-        dispatch(refetch());
-      });
+      dispatch(refetch());
     }
     if (state.yAxis.type === "point") {
       unstable_batchedUpdates(() => {
-        dispatch({ type: "setAutoscroll", autoscroll });
         dispatch(setOffset(0));
         dispatch(fastForward());
       });
@@ -381,7 +378,7 @@ const axes = (
       !isNaN(yBounds[0]) && !isNaN(yBounds[1])
         ? (message: Message) => yScale(message.createdTimestamp)
         : undefined;
-    return { yAxis, yScale, y };
+    return { yAxis, yScale, y, transitionAlpha };
   };
   const point = () => {
     const yScale =
@@ -398,7 +395,7 @@ const axes = (
       !isNaN(yBounds[0]) && !isNaN(yBounds[1])
         ? (message: Message) => yScale(message.id)
         : undefined;
-    return { yAxis, yScale, y };
+    return { yAxis, yScale, y, transitionAlpha };
   };
 
   /* TODO: Optimize and clean up transition code */
@@ -412,6 +409,7 @@ const axes = (
         y: (message: Message) =>
           (1 - transitionAlpha) * yPoint(message) +
           transitionAlpha * yTime(message),
+        transitionAlpha,
       };
     } else {
       return time();
@@ -427,6 +425,7 @@ const axes = (
         y: (message: Message) =>
           (1 - transitionAlpha) * yTime(message) +
           transitionAlpha * yPoint(message),
+        transitionAlpha,
       };
     } else {
       return point();

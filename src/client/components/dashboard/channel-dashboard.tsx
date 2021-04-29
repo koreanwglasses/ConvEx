@@ -3,7 +3,7 @@ import React from "react";
 import { Route, Switch, useParams, useRouteMatch } from "react-router-dom";
 import { useAwait } from "../../hooks/utility-hooks";
 import { fetchChannel } from "../../models/discord";
-import { ChannelListView } from "../channel/channel-list-view-alt";
+import { ChannelListView } from "../channel/channel-list-view-full";
 import { ChannelViewA } from "../channel/channel-view-a-alt";
 import { ChannelViewB } from "../channel/channel-view-b";
 import { ChannelViewC } from "../channel/channel-view-c";

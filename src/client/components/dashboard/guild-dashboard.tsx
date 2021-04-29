@@ -15,7 +15,7 @@ import { Channel, Guild, routes } from "../../../endpoints";
 import { useAPI } from "../../hooks/use-api";
 import { useAwaitAll } from "../../hooks/utility-hooks";
 import { fetchChannel } from "../../models/discord";
-import { ChannelListView } from "../channel/channel-list-view-alt";
+import { ChannelListView } from "../channel/channel-list-view";
 import { UnstyledLink } from "../ui/unstyled-link";
 
 const useStyles = makeStyles((theme) => ({

@@ -1,6 +1,8 @@
 import React from "react";
+import { AnalysesBars } from "../charts/analysis-bars";
 import { MessageList } from "../charts/message-list";
 import { MessageScroller } from "../charts/message-scroller";
+import { YAxis } from "../charts/y-axis";
 
 export const ChannelListView = ({
   guildId,
@@ -15,6 +17,9 @@ export const ChannelListView = ({
     channelId={channelId}
     defaultYAxis={{ type: "point", offset: 0, step: 65 }}
   >
+    <YAxis />
     <MessageList />
+    <YAxis compact />
+    <AnalysesBars />
   </MessageScroller>
 );
