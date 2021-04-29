@@ -18,6 +18,8 @@ const useStyles = makeStyles((theme) => ({
     height: "fit-content",
     transition: "max-height 300ms",
     overflow: "hidden",
+    boxSizing: "border-box",
+    borderRadius: 30,
     "&:hover": {
       maxHeight: 500,
       zIndex: 1,
@@ -50,11 +52,11 @@ const useStyles = makeStyles((theme) => ({
 export const MessageView = ({
   message,
   analysis,
-  style,
+  ...divProps
 }: {
   message: Message;
   analysis?: { error: Error; result: Perspective.Result };
-} & Pick<React.ComponentProps<"div">, "style">) => {
+} & React.ComponentProps<"div">) => {
   const classes = useStyles();
 
   const user = useAwait(() => fetchUser(message.authorID), []);
@@ -78,7 +80,7 @@ export const MessageView = ({
       className={classes.root}
       backgroundColor={heatmapColor}
       lightClass={classes.light}
-      style={style}
+      {...divProps}
     >
       <Avatar
         alt={user?.username}

@@ -2,10 +2,19 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import { Message } from "../../../endpoints";
 import { useLiveMessages } from "../../hooks/use-live-messages";
 
+/**
+ * @depcreated Use ../charts/message-scroller instead
+ */
 const ListScrollerContext = React.createContext<Message[]>([]);
 
+/**
+ * @depcreated Use ../charts/message-scroller instead
+ */
 export const useMessages = () => useContext(ListScrollerContext);
 
+/**
+ * @depcreated Use ../charts/message-scroller instead
+ */
 export const ListScroller = ({
   children,
   guildId,

@@ -16,6 +16,8 @@ import * as Sockets from "../../sockets";
 import { MessageScrollerToolbar } from "./toolbar";
 
 const DEBUG = true;
+const DEFAULT_STEP = 60;
+const DEFAULT_TIMESPAN = 1000 * 60 * 60 * 24;
 
 /////////////
 // Reducer //
@@ -45,7 +47,7 @@ type Action =
   | { type: "setAutoscroll"; autoscroll: boolean }
   | { type: "setContainerHeight"; height: number }
   | { type: "setIsExpanding"; value: boolean }
-  | { type: "setYAxisType"; value: State["yAxis"]["type"] }
+  | { type: "setYAxisType"; value: State["yAxis"]["type"]; pivot?: string }
   | { type: "setTransitionAlpha"; value: number };
 
 const reducer: Reducer<State, Action> = (state, action) => {
@@ -102,7 +104,7 @@ const reducer: Reducer<State, Action> = (state, action) => {
           messages[Math.round(i)]?.createdTimestamp ?? Date.now();
 
         const timespan = ((domain) =>
-          domain ? domain[1] - domain[0] : 1000 * 60 * 60 * 24)(yAxis.domain);
+          domain ? domain[1] - domain[0] : DEFAULT_TIMESPAN)(yAxis.domain);
 
         const newMaxTime = Math.min(centerTimestamp + timespan / 2, Date.now());
 
@@ -117,16 +119,21 @@ const reducer: Reducer<State, Action> = (state, action) => {
         };
       }
       if (yAxis.type === "time" && action.value === "point") {
-        const pivot = (yAxis.domain[1] + yAxis.domain[0]) / 2;
         const newMessages = messageManager({ guildId, channelId }).cache;
-        const pivotMessage = minBy(newMessages, (message) =>
-          Math.abs(message.createdTimestamp - pivot)
-        );
+        let pivotMessageId: string;
+        if (action.pivot) {
+          pivotMessageId = action.pivot;
+        } else {
+          const pivot = (yAxis.domain[1] + yAxis.domain[0]) / 2;
+          pivotMessageId = minBy(newMessages, (message) =>
+            Math.abs(message.createdTimestamp - pivot)
+          ).id;
+        }
         const pivotIdx = newMessages.findIndex(
-          ({ id }) => pivotMessage.id === id
+          ({ id }) => pivotMessageId === id
         );
 
-        const step = yAxis.step ?? 80;
+        const step = yAxis.step ?? DEFAULT_STEP;
         const offset = step * (pivotIdx + 1) - containerHeight / 2;
         return {
           ...state,
@@ -166,13 +173,18 @@ const setContainerHeight = (height: number): Action => ({
   height,
 });
 
-const setYAxisType = (type: State["yAxis"]["type"]): Thunk<State, Action> => (
-  dispatch
-) => {
+const setYAxisType = (
+  type: State["yAxis"]["type"],
+  pivot?: string
+): Thunk<State, Action> => (dispatch, getState) => {
   /* TODO: Optimize and clean up transition code */
+  const { yAxis } = getState();
+  if (yAxis.type === type) return;
+
   dispatch({
     type: "setYAxisType",
     value: type,
+    pivot,
   });
 
   const animationStartTime = Date.now();
@@ -489,8 +501,8 @@ export const useDispatch = () => {
       scroll: (deltaY: number) => dispatch(scroll(deltaY)),
       scrollTimeScale: (deltaY: number, origin?: number) =>
         dispatch(scrollTimeScale(deltaY, origin)),
-      setYAxisType: (type: State["yAxis"]["type"]) =>
-        dispatch(setYAxisType(type)),
+      setYAxisType: (type: State["yAxis"]["type"], pivot?: string) =>
+        dispatch(setYAxisType(type, pivot)),
     }),
     [dispatch]
   );
@@ -508,7 +520,7 @@ export const MessageScroller = ({
   children,
   defaultYAxis = {
     type: "time",
-    domain: [Date.now() - 1000 * 60 * 60, Date.now()],
+    domain: [Date.now() - DEFAULT_TIMESPAN, Date.now()],
   },
 }: React.PropsWithChildren<{
   channelId: string;

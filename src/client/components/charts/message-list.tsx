@@ -4,7 +4,7 @@ import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { MessageView } from "../message/message-view";
 import { ChartContainer, useChartSize } from "./chart-container";
-import { useAxes, useMessages } from "./message-scroller";
+import { useAxes, useDispatch, useMessages } from "./message-scroller";
 
 const useStyles = makeStyles((theme) => ({
   listContainer: {
@@ -87,6 +87,8 @@ const Chart = () => {
     messages = filteredMessages;
   }
 
+  const { setYAxisType } = useDispatch();
+
   return (
     <div
       className={classes.listContainer}
@@ -101,8 +103,9 @@ const Chart = () => {
             top: y?.(message) - messageHeight / 2,
             position: "absolute",
             width,
-            boxSizing: "border-box",
-            borderRadius: messageHeight / 2,
+          }}
+          onDoubleClick={() => {
+            setYAxisType("point", message.id);
           }}
         />
       ))}
