@@ -31,15 +31,18 @@ export const absoluteUrl = (path: string) => `${rootURL()}${path}`;
 
 export type ValueOf<T> = T[keyof T];
 
-export const cached = <S extends unknown[], T>(func: (...args: S) => T) => {
+export const cached = <S extends unknown[], T>(
+  func: (...args: S) => T,
+  key: (...args: S) => string = (...args: S) => JSON.stringify(args)
+) => {
   const cache = new Map<string, T>();
   return Object.assign(
     function (...args: S) {
-      const key = JSON.stringify(args);
-      if (cache.has(key)) return cache.get(key);
+      const key_ = key(...args);
+      if (cache.has(key_)) return cache.get(key_);
 
       const value = func(...args);
-      cache.set(key, value);
+      cache.set(key_, value);
       return value;
     },
     {

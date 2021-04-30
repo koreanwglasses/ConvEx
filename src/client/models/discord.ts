@@ -13,7 +13,8 @@ export const fetchChannel = cached(
 
 export const messageManager = cached(
   ({ guildId, channelId }: { guildId: string; channelId: string }) =>
-    new MessageManager(guildId, channelId)
+    new MessageManager(guildId, channelId),
+  ({ guildId, channelId }) => `${guildId},${channelId}`
 );
 
 class MessageManager {
