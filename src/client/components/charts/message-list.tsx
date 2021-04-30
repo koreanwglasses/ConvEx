@@ -42,10 +42,9 @@ const Chart = () => {
     const bottom = y_ + messageHeight / 2;
     return [top, bottom] as const;
   };
-  const intersects = (
-    [top1, bottom1]: readonly [number, number],
-    [top2, bottom2]: readonly [number, number]
-  ) => {
+  const overlap = (message1: Message, message2: Message) => {
+    const [top1, bottom1] = computeBounds(message1);
+    const [top2, bottom2] = computeBounds(message2);
     const x = (bottom2 - top1) / messageHeight;
     const y = (bottom1 - top2) / messageHeight;
 
@@ -56,38 +55,20 @@ const Chart = () => {
     analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
       .value ?? 0;
 
-  while (true) {
-    const filteredMessages = messages.filter((message, i) => {
-      const bounds = computeBounds(message);
+  const messagesToShow = new Set<Message>();
+  messages.forEach((message1) => {
+    const overlapping = [...messagesToShow].filter(
+      (message2) => overlap(message1, message2) > 0.5
+    );
 
-      const prevNeighborScores: number[] = [];
-      const nextNeighborScores: number[] = [];
-      const checkNeighbor = (index: number) => {
-        if (index >= 0 && index < messages.length) {
-          const neighbor = messages[index];
-          const neighborBounds = computeBounds(neighbor);
-          if (intersects(bounds, neighborBounds) > 0.5)
-            (index < i ? prevNeighborScores : nextNeighborScores).push(
-              score(neighbor)
-            );
-        }
-      };
-      checkNeighbor(i - 3);
-      checkNeighbor(i - 2);
-      checkNeighbor(i - 1);
-      checkNeighbor(i + 1);
-      checkNeighbor(i + 2);
-      checkNeighbor(i + 3);
+    const maxScore = Math.max(...overlapping.map(score));
 
-      return (
-        score(message) >= Math.max(...nextNeighborScores) &&
-        score(message) > Math.max(...prevNeighborScores)
-      );
-    });
-
-    if (filteredMessages.length === messages.length) break;
-    messages = filteredMessages;
-  }
+    if (score(message1) > maxScore) {
+      overlapping.forEach((message2) => messagesToShow.delete(message2));
+      messagesToShow.add(message1);
+    }
+  });
+  messages = [...messagesToShow];
 
   return transitionAlpha < 1 ? (
     <TransitionMessageList

@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import useThunkReducer, { Thunk } from "react-hook-thunk-reducer";
-import { filterBetween_increasingMap, indexOfFirstPositive_increasingMap } from "../../../common/algorithms";
+import { filterBetween_increasingMap } from "../../../common/algorithms";
 import { createReducer, minBy, pick } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { messageManager } from "../../models/discord";
