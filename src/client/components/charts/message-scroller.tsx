@@ -131,7 +131,7 @@ const reducer = createReducer({
           type: "time",
           domain: [newMaxTime - timespan, newMaxTime],
         },
-        autoscroll: newMaxTime + timespan / 2 >= Date.now(),
+        autoscroll: centerTimestamp + timespan / 2 >= Date.now(),
       };
     };
 
@@ -358,11 +358,6 @@ const axes = (
       (messageIdx - originIdx) * yAxis.step
     );
   };
-  const yScalePoint = d3
-    .scalePoint()
-    .domain(mm.cache.map(({ id }) => id))
-    .range([yPoint(mm.cache[0]?.id), yPoint(mm.cache.last()?.id)])
-    .padding(yAxis.step / 2);
   const yInvPoint = (y: number) => {
     const originIdx = mm.cache.findIndexById(yAxis.originMessageId);
     return originIdx + (bottom + yAxis.offset - y) / yAxis.step + 1 / 2;
@@ -374,6 +369,10 @@ const axes = (
       targetY - bottom + yAxis.step / 2 + (messageIdx - originIdx) * yAxis.step
     );
   };
+  const yScalePoint = d3
+    .scaleLinear()
+    .domain([yInvPoint(bottom), yInvPoint(top)])
+    .range([bottom, top]);
 
   const timeFactor =
     yAxis.type === "time" ? transitionAlpha : 1 - transitionAlpha;

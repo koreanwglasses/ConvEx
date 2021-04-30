@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { ScalePoint, ScaleTime } from "d3";
+import { ScaleLinear, ScaleTime } from "d3";
 import React, { useEffect, useRef } from "react";
 import { ChartContainer, useChartSize } from "./chart-container";
 import { useAxes, useDispatch } from "./message-scroller";
@@ -49,7 +49,7 @@ export const YAxis = ({
         />
       )}
       {yAxis?.type === "point" && (
-        <YPointChart yScale={yScale as ScalePoint<string>} compact={compact} />
+        <YPointChart yScale={yScale as ScaleLinear<number, number, never>} />
       )}
     </ChartContainer>
   );
@@ -86,10 +86,8 @@ const YTimeChart = ({
 
 const YPointChart = ({
   yScale,
-  compact,
 }: {
-  yScale: ScalePoint<string>;
-  compact: boolean;
+  yScale: ScaleLinear<number, number, never>;
 }) => {
   const { width, height } = useChartSize();
   const svgRef = useRef<SVGSVGElement>();
