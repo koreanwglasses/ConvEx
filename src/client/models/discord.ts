@@ -1,3 +1,4 @@
+import { filterBetween_increasingMap } from "../../common/algorithms";
 import { cached, omitUndefined, singletonPromise } from "../../common/utils";
 import { Message, RequestBody, routes } from "../../endpoints";
 import { api } from "../api";
@@ -164,10 +165,12 @@ class MessageManager {
       (await this.expandBack())
     );
     while (this.lastExpandFrontTime < newestTime && (await this.expandFront()));
-    return this.cache_.filter(
-      (message) =>
-        oldestTime <= message.createdTimestamp &&
-        message.createdTimestamp <= newestTime
+
+    return filterBetween_increasingMap(
+      this.cache_,
+      (message) => -message.createdTimestamp,
+      -newestTime,
+      -oldestTime
     );
   }
 
@@ -175,10 +178,8 @@ class MessageManager {
     await this.expandToMessage(oldest);
     if (newest) await this.expandToMessage(newest);
 
-    const oldestIdx = this.cache_.findIndex((message) => message.id === oldest);
-    const newestIdx = newest
-      ? this.cache_.findIndex((message) => message.id === newest)
-      : 0;
+    const oldestIdx = this.findIndexById(oldest);
+    const newestIdx = newest ? this.findIndexById(newest) : 0;
 
     return this.cache_.slice(newestIdx, oldestIdx);
   }
@@ -187,7 +188,7 @@ class MessageManager {
     if (!before) return await this.fetchRecent(limit);
 
     await this.expandToMessage(before);
-    const idx = this.cache_.findIndex((message) => message.id === before);
+    const idx = this.findIndexById(before);
     while (this.cache_.length - idx - 1 < limit && (await this.expandBack()));
     return this.cache_.slice(idx + 1, idx + limit + 1);
   }

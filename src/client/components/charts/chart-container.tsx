@@ -56,7 +56,7 @@ export const ChartContainer = React.forwardRef(
           scroll(e.deltaY);
         });
       containerRef.current.addEventListener("wheel", listener);
-      return () => containerRef.current.removeEventListener("wheel", listener);
+      return () => containerRef.current?.removeEventListener("wheel", listener);
     }, [scroll, onWheel]);
 
     return (

@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import useThunkReducer, { Thunk } from "react-hook-thunk-reducer";
+import { filterBetween_increasingMap, indexOfFirstPositive_increasingMap } from "../../../common/algorithms";
 import { createReducer, minBy, pick } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { messageManager } from "../../models/discord";
@@ -340,8 +341,21 @@ const scrollTimeScale = (
 const axes = (
   { yAxis, containerHeight, transitionAlpha, guildId, channelId }: State,
   yBounds: [top: number, bottom: number] = [0, containerHeight]
-) => {
+): {
+  yScale?:
+    | d3.ScaleTime<number, number, never>
+    | d3.ScaleLinear<number, number, never>;
+  y?: (message: Message) => number;
+  yInvPoint?: (y: number) => number;
+  yInvTime?: (y: number) => Date;
+  yTime?: (timestamp: number) => number;
+  yPoint?: (messageId: string) => number;
+  computeOffset?: (messageId: string, targetY: number) => number;
+} => {
   const [top, bottom] = yBounds;
+
+  if (isNaN(top) || isNaN(bottom)) return {};
+
   const mm = messageManager({ guildId, channelId });
 
   const yScaleTime = d3.scaleTime().domain(yAxis.domain).range(yBounds);
@@ -408,20 +422,17 @@ const MessageScrollerContext = createContext<{
  * visible, so be sure to set the bounds with enough padding.
  */
 export const useMessages = (minY?: number, maxY?: number) => {
-  /* TODO: Optimize with useMemo */
-  const context = useContext(MessageScrollerContext);
+  const state = useContext(MessageScrollerContext).state;
+  const { guildId, channelId, containerHeight, yAxis } = state;
 
-  const { guildId, channelId, containerHeight } = context.state;
+  const minY_ = minY ?? -yAxis.step;
+  const maxY_ = maxY ?? containerHeight + yAxis.step;
 
-  const { y } = axes(context.state);
+  const { y } = axes(state);
+  if (!y) return [];
 
-  const minY_ = minY ?? -context.state.yAxis.step;
-  const maxY_ = maxY ?? containerHeight + context.state.yAxis.step;
-
-  return messageManager({ guildId, channelId }).cache.filter((message) => {
-    const y_ = y(message);
-    return minY_ < y_ && y_ < maxY_;
-  });
+  const cache = messageManager({ guildId, channelId }).cache;
+  return filterBetween_increasingMap(cache, y, minY_, maxY_);
 };
 
 export const useAxes = (yBounds?: [top: number, bottom: number]) => {
