@@ -1,7 +1,6 @@
 import * as d3 from "d3";
 import React, {
   createContext,
-  Reducer,
   useContext,
   useEffect,
   useMemo,
@@ -9,8 +8,8 @@ import React, {
 } from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import useThunkReducer, { Thunk } from "react-hook-thunk-reducer";
+import { createReducer, minBy, pick } from "../../../common/utils";
 import { Message } from "../../../endpoints";
-import { hasDuplicates, minBy } from "../../../utils";
 import { messageManager } from "../../models/discord";
 import * as Sockets from "../../sockets";
 import { MessageScrollerToolbar } from "./toolbar";
@@ -29,143 +28,121 @@ type State = {
   yAxis: {
     type: "time" | "point";
     domain?: [min: number, max: number];
+
+    originMessageId?: string;
     offset?: number;
     step?: number;
   };
-  messages: Message[];
   autoscroll: boolean;
   containerHeight: number;
   isExpanding: boolean;
   transitionAlpha: number;
   transitionPivot?: string;
-};
-type Action =
-  | { type: "setMessages"; messages: Message[] }
-  | { type: "pushMessages"; messages: Message[] }
-  | { type: "unshiftMessages"; messages: Message[] }
-  | { type: "setOffset"; offset: number }
-  | { type: "setTimeDomain"; domain: [number, number] }
-  | { type: "setAutoscroll"; autoscroll: boolean }
-  | { type: "setContainerHeight"; height: number }
-  | { type: "setIsExpanding"; value: boolean }
-  | { type: "setYAxisType"; value: State["yAxis"]["type"]; pivot?: string }
-  | { type: "setTransitionAlpha"; value: number };
-
-const reducer: Reducer<State, Action> = (state, action) => {
-  const { guildId, channelId, yAxis, messages, containerHeight } = state;
-
-  switch (action.type) {
-    case "setMessages":
-      return { ...state, messages: action.messages };
-
-    case "pushMessages":
-      if (
-        DEBUG &&
-        hasDuplicates([...messages, ...action.messages].map(({ id }) => id))
-      ) {
-        console.error(
-          "Adding duplicate messages. This is indicative of a bug."
-        );
-      }
-      return { ...state, messages: [...state.messages, ...action.messages] };
-
-    case "unshiftMessages":
-      return { ...state, messages: [...action.messages, ...state.messages] };
-
-    case "setOffset":
-      if (yAxis.type != "point")
-        throw new Error('setOffset should only be used with "point" mode');
-      return { ...state, yAxis: { ...yAxis, offset: action.offset } };
-
-    case "setTimeDomain":
-      if (yAxis.type != "time")
-        throw new Error('setTimeDomain should only be used with "time" mode');
-      return { ...state, yAxis: { ...yAxis, domain: action.domain } };
-
-    case "setAutoscroll":
-      return { ...state, autoscroll: action.autoscroll };
-
-    case "setContainerHeight":
-      return { ...state, containerHeight: action.height };
-
-    case "setIsExpanding":
-      if (DEBUG && state.isExpanding && action.value) {
-        console.error(
-          "isExpanding has been set to true twice in a row. This is indicative of a bug."
-        );
-      }
-      return { ...state, isExpanding: action.value };
-
-    case "setYAxisType":
-      /* TODO: Optimize and clean up transition code */
-      if (yAxis.type === action.value) return state;
-      if (yAxis.type === "point" && action.value === "time") {
-        const i = (containerHeight / 2 + yAxis.offset) / yAxis.step - 1;
-        const centerTimestamp =
-          messages[Math.round(i)]?.createdTimestamp ?? Date.now();
-
-        const timespan = ((domain) =>
-          domain ? domain[1] - domain[0] : DEFAULT_TIMESPAN)(yAxis.domain);
-
-        const newMaxTime = Math.min(centerTimestamp + timespan / 2, Date.now());
-
-        return {
-          ...state,
-          yAxis: {
-            ...yAxis,
-            type: "time",
-            domain: [newMaxTime - timespan, newMaxTime],
-          },
-          autoscroll: newMaxTime + timespan / 2 >= Date.now(),
-        };
-      }
-      if (yAxis.type === "time" && action.value === "point") {
-        const newMessages = messageManager({ guildId, channelId }).cache;
-        let pivotMessageId: string;
-        if (action.pivot) {
-          pivotMessageId = action.pivot;
-        } else {
-          const pivot = (yAxis.domain[1] + yAxis.domain[0]) / 2;
-          pivotMessageId = minBy(newMessages, (message) =>
-            Math.abs(message.createdTimestamp - pivot)
-          ).id;
-        }
-        const pivotIdx = newMessages.findIndex(
-          ({ id }) => pivotMessageId === id
-        );
-
-        const step = yAxis.step ?? DEFAULT_STEP;
-        const offset = step * (pivotIdx + 1) - containerHeight / 2;
-        return {
-          ...state,
-          yAxis: { ...yAxis, type: "point", step, offset },
-          messages: newMessages,
-          transitionPivot: action.pivot,
-        };
-      }
-      break;
-
-    case "setTransitionAlpha":
-      return { ...state, transitionAlpha: Math.min(action.value, 1) };
-
-    default:
-      return state;
-  }
+  messageCount: number;
 };
 
-const setMessages = (messages: Message[]): Action => ({
-  type: "setMessages",
-  messages,
-});
+type Action = Parameters<typeof reducer>[1];
+const reducer = createReducer({
+  setOffset(state: State, action: { offset: number }) {
+    if (state.yAxis.type != "point")
+      throw new Error('setOffset should only be used with "point" mode');
+    return { ...state, yAxis: { ...state.yAxis, offset: action.offset } };
+  },
 
-const pushMessages = (messages: Message[]): Action => ({
-  type: "pushMessages",
-  messages,
-});
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  updateMessages(state: State, _: unknown) {
+    const { guildId, channelId } = state;
+    return {
+      ...state,
+      messageCount: messageManager({ guildId, channelId }).cache.length,
+    };
+  },
 
-const unshiftMessages = (messages: Message[]): Action => ({
-  type: "unshiftMessages",
-  messages,
+  setOriginMessageId(state: State, action: { id: string }) {
+    return { ...state, yAxis: { ...state.yAxis, originMessageId: action.id } };
+  },
+
+  setTimeDomain(state: State, action: { domain: [number, number] }) {
+    return { ...state, yAxis: { ...state.yAxis, domain: action.domain } };
+  },
+
+  setAutoscroll(state: State, action: { autoscroll: boolean }) {
+    return { ...state, autoscroll: action.autoscroll };
+  },
+
+  setContainerHeight(state: State, action: { height: number }) {
+    return { ...state, containerHeight: action.height };
+  },
+
+  setIsExpanding(state: State, action: { value: boolean }) {
+    if (DEBUG && state.isExpanding && action.value) {
+      console.error(
+        "isExpanding has been set to true twice in a row. This is indicative of a bug."
+      );
+    }
+    return { ...state, isExpanding: action.value };
+  },
+
+  setYAxisType(
+    state: State,
+    action: { value: State["yAxis"]["type"]; pivot?: string }
+  ) {
+    const { guildId, channelId, containerHeight, yAxis } = state;
+    const mm = messageManager({ guildId, channelId });
+
+    const switchToPointScale = (): State => {
+      const newMessages = messageManager({ guildId, channelId }).cache;
+      let pivotMessageId: string;
+      if (action.pivot) {
+        pivotMessageId = action.pivot;
+      } else {
+        const pivot = (yAxis.domain[1] + yAxis.domain[0]) / 2;
+        pivotMessageId = minBy(newMessages, (message) =>
+          Math.abs(message.createdTimestamp - pivot)
+        ).id;
+      }
+
+      const { computeOffset } = axes(state);
+      const offset = computeOffset(pivotMessageId, containerHeight / 2);
+
+      return {
+        ...state,
+        yAxis: { ...yAxis, type: "point", offset },
+        transitionPivot: action.pivot,
+      };
+    };
+
+    const switchToTimeScale = (): State => {
+      const { yInvPoint } = axes(state);
+      const i =
+        Math.round(yInvPoint(containerHeight / 2)) +
+        mm.cache.findIndexById(yAxis.originMessageId);
+      const centerTimestamp = mm.cache[i]?.createdTimestamp ?? Date.now();
+
+      const timespan = ((domain) =>
+        domain ? domain[1] - domain[0] : DEFAULT_TIMESPAN)(yAxis.domain);
+
+      const newMaxTime = Math.min(centerTimestamp + timespan / 2, Date.now());
+
+      return {
+        ...state,
+        yAxis: {
+          ...yAxis,
+          type: "time",
+          domain: [newMaxTime - timespan, newMaxTime],
+        },
+        autoscroll: newMaxTime + timespan / 2 >= Date.now(),
+      };
+    };
+
+    if (yAxis.type === action.value) return state;
+    if (action.value === "point") return switchToPointScale();
+    if (action.value === "time") return switchToTimeScale();
+  },
+
+  setTransitionAlpha(state: State, action: { value: number }) {
+    return { ...state, transitionAlpha: Math.min(action.value, 1) };
+  },
 });
 
 const setOffset = (offset: number): Action => ({ type: "setOffset", offset });
@@ -195,31 +172,15 @@ const setYAxisType = (
     const ease = (x: number) =>
       x < 0 || x > 1 ? x : Math.sin((Math.PI * x) / 2) ** 2;
     const alpha = ease(t / 1000);
+
     dispatch({ type: "setTransitionAlpha", value: alpha });
 
     if (alpha < 1) return requestAnimationFrame(animate);
-    if (type === "time") return dispatch(refetch());
   })();
 };
 
-const refetch = (): Thunk<State, Action> => async (dispatch, getState) => {
-  const { guildId, channelId, yAxis } = getState();
-
-  if (yAxis.type !== "time")
-    throw new Error('refetch should only be used with "time" mode');
-
-  dispatch(
-    setMessages(
-      await messageManager({ guildId, channelId }).filterByTime(
-        yAxis.domain[0],
-        yAxis.domain[1]
-      )
-    )
-  );
-};
-
 const expand = (): Thunk<State, Action> => async (dispatch, getState) => {
-  const { guildId, channelId, yAxis, messages, isExpanding } = getState();
+  const { guildId, channelId, yAxis, isExpanding } = getState();
 
   if (yAxis.type !== "point")
     throw new Error('expand should only be used with "point" mode');
@@ -231,25 +192,25 @@ const expand = (): Thunk<State, Action> => async (dispatch, getState) => {
 
   unstable_batchedUpdates(async () => {
     dispatch({ type: "setIsExpanding", value: true });
-    dispatch(
-      pushMessages(
-        await messageManager({ guildId, channelId }).fetchBefore(
-          messages.length && messages[messages.length - 1].id
-        )
-      )
-    );
+    await messageManager({ guildId, channelId }).expandBack();
     dispatch({ type: "setIsExpanding", value: false });
+    dispatch({ type: "updateMessages" });
   });
 };
 
 const fastForward = (): Thunk<State, Action> => async (dispatch, getState) => {
   const { guildId, channelId, yAxis } = getState();
-  if (yAxis.type !== "point")
-    throw new Error('fastForward should only be used with "point" mode');
 
-  dispatch(
-    setMessages(await messageManager({ guildId, channelId }).fetchRecent())
-  );
+  if (yAxis.type === "time") {
+    const timespan = yAxis.domain[1] - yAxis.domain[0];
+    dispatch(setTimeDomain([Date.now() - timespan, Date.now()]));
+  }
+
+  if (yAxis.type === "point") {
+    const mm = messageManager({ guildId, channelId });
+    await mm.fastForward();
+    dispatch({ type: "setOriginMessageId", id: mm.cache[0].id });
+  }
 };
 
 const setAutoScroll = (autoscroll: boolean): Thunk<State, Action> => (
@@ -260,30 +221,27 @@ const setAutoScroll = (autoscroll: boolean): Thunk<State, Action> => (
   const { yAxis } = state;
 
   dispatch({ type: "setAutoscroll", autoscroll });
-  if (!state.autoscroll && autoscroll) {
-    if (yAxis.type === "time") {
-      dispatch(refetch());
-    }
-    if (state.yAxis.type === "point") {
-      unstable_batchedUpdates(() => {
-        dispatch(setOffset(0));
-        dispatch(fastForward());
-      });
-    }
+  if (!state.autoscroll && autoscroll && yAxis.type === "point") {
+    unstable_batchedUpdates(() => {
+      dispatch(setOffset(0));
+      dispatch(fastForward());
+    });
   }
 };
 
 const setTimeDomain = (
-  domain: [min: number, max: number],
-  doRefetch = true
-): Thunk<State, Action> => (dispatch, getState) => {
-  const { yAxis } = getState();
-
-  if (yAxis.type !== "time")
-    throw new Error('setTimespan should only be used with "time" mode');
+  domain: [min: number, max: number]
+): Thunk<State, Action> => async (dispatch, getState) => {
+  const { yAxis, guildId, channelId } = getState();
 
   dispatch({ type: "setTimeDomain", domain });
-  if (doRefetch) dispatch(refetch());
+  if (yAxis.type === "time") {
+    await messageManager({ guildId, channelId }).filterByTime(
+      domain[0],
+      domain[1]
+    );
+    dispatch({ type: "updateMessages" });
+  }
 };
 
 const scrollTime = (deltaY: number): Thunk<State, Action> => (
@@ -316,7 +274,7 @@ const scrollOffset = (deltaY: number): Thunk<State, Action> => (
   getState
 ) => {
   const state = getState();
-  const { yAxis, messages } = state;
+  const { guildId, channelId, yAxis } = state;
   if (yAxis.type !== "point")
     throw new Error('scrollOffset should only be used with "point" mode');
 
@@ -334,7 +292,8 @@ const scrollOffset = (deltaY: number): Thunk<State, Action> => (
   }
 
   const { y } = axes(state);
-  if (messages.length && y && y(messages[messages.length - 1]) > 0) {
+  const mm = messageManager({ guildId, channelId });
+  if (y(mm.cache.last()) > 0) {
     dispatch(expand());
   }
 };
@@ -379,81 +338,59 @@ const scrollTimeScale = (
 /////////////
 
 const axes = (
-  { yAxis, messages, containerHeight, transitionAlpha, transitionPivot }: State,
+  { yAxis, containerHeight, transitionAlpha, guildId, channelId }: State,
   yBounds: [top: number, bottom: number] = [0, containerHeight]
 ) => {
-  /* TODO: Optimize with useMemo */
-  const time = () => {
-    const yScale =
-      !isNaN(yBounds[0]) && !isNaN(yBounds[1])
-        ? d3.scaleTime().domain(yAxis.domain).range(yBounds)
-        : undefined;
-    const y =
-      !isNaN(yBounds[0]) && !isNaN(yBounds[1])
-        ? (message: Message) => yScale(message.createdTimestamp)
-        : undefined;
-    return { yScale, y, yAxis, transitionAlpha, transitionPivot };
-  };
-  const point = () => {
-    const yScale =
-      !isNaN(yBounds[0]) && !isNaN(yBounds[1])
-        ? d3
-            .scalePoint()
-            .domain(messages.map(({ id }) => id))
-            .range([
-              yBounds[1] + yAxis.offset - yAxis.step,
-              yBounds[1] - messages.length * yAxis.step + yAxis.offset,
-            ])
-        : undefined;
-    const y =
-      !isNaN(yBounds[0]) && !isNaN(yBounds[1])
-        ? (message: Message) => yScale(message.id)
-        : undefined;
-    return {
-      yScale,
-      y,
+  const [top, bottom] = yBounds;
+  const mm = messageManager({ guildId, channelId });
 
-      yAxis,
-      transitionAlpha,
-      transitionPivot,
-    };
+  const yScaleTime = d3.scaleTime().domain(yAxis.domain).range(yBounds);
+  const yTime = (timestamp: number) => yScaleTime(timestamp);
+  const yInvTime = (y: number) => yScaleTime.invert(y);
+
+  const yPoint = (messageId: string) => {
+    const originIdx = mm.cache.findIndexById(yAxis.originMessageId);
+    const messageIdx = mm.cache.findIndexById(messageId);
+    return (
+      bottom +
+      yAxis.offset -
+      yAxis.step / 2 -
+      (messageIdx - originIdx) * yAxis.step
+    );
+  };
+  const yScalePoint = d3
+    .scalePoint()
+    .domain(mm.cache.map(({ id }) => id))
+    .range([yPoint(mm.cache[0]?.id), yPoint(mm.cache.last()?.id)])
+    .padding(yAxis.step / 2);
+  const yInvPoint = (y: number) => {
+    const originIdx = mm.cache.findIndexById(yAxis.originMessageId);
+    return originIdx + (bottom + yAxis.offset - y) / yAxis.step + 1 / 2;
+  };
+  const computeOffset = (messageId: string, targetY: number) => {
+    const originIdx = mm.cache.findIndexById(yAxis.originMessageId);
+    const messageIdx = mm.cache.findIndexById(messageId);
+    return (
+      targetY - bottom + yAxis.step / 2 + (messageIdx - originIdx) * yAxis.step
+    );
   };
 
-  /* TODO: Optimize and clean up transition code */
-  if (yAxis.type === "time") {
-    if (transitionAlpha < 1) {
-      const { y: yPoint } = point();
-      const { yScale, y: yTime } = time();
-      return {
-        yAxis,
-        yScale,
-        y: (message: Message) =>
-          (1 - transitionAlpha) * yPoint(message) +
-          transitionAlpha * yTime(message),
-        transitionAlpha,
-        transitionPivot,
-      };
-    } else {
-      return time();
-    }
-  }
-  if (yAxis.type === "point") {
-    if (transitionAlpha < 1) {
-      const { yScale, y: yPoint } = point();
-      const { y: yTime } = time();
-      return {
-        yAxis,
-        yScale,
-        y: (message: Message) =>
-          (1 - transitionAlpha) * yTime(message) +
-          transitionAlpha * yPoint(message),
-        transitionAlpha,
-        transitionPivot,
-      };
-    } else {
-      return point();
-    }
-  }
+  const timeFactor =
+    yAxis.type === "time" ? transitionAlpha : 1 - transitionAlpha;
+  const pointFactor =
+    yAxis.type === "point" ? transitionAlpha : 1 - transitionAlpha;
+
+  return {
+    yScale: yAxis.type === "time" ? yScaleTime : yScalePoint,
+    y: (message: Message) =>
+      timeFactor * yTime(message.createdTimestamp) +
+      pointFactor * yPoint(message.id),
+    yInvPoint,
+    yInvTime,
+    yTime,
+    yPoint,
+    computeOffset,
+  };
 };
 
 ///////////
@@ -465,44 +402,36 @@ const MessageScrollerContext = createContext<{
   dispatch: React.Dispatch<Action | Thunk<State, Action>>;
 }>(undefined);
 
-export const useMessages = () => {
+/**
+ * Fetches messages whose y position (as determined by useAxes) is within the
+ * given bounds.  By default, the bounds are minY = 0, maxY = maxChartHeight.
+ * This function filters out messages some messages that are only partially
+ * visible, so be sure to set the bounds with enough padding.
+ */
+export const useMessages = (minY?: number, maxY?: number) => {
   /* TODO: Optimize with useMemo */
   const context = useContext(MessageScrollerContext);
 
-  const {
-    guildId,
-    channelId,
-    yAxis,
-    containerHeight,
-    messages,
-    transitionAlpha,
-  } = context.state;
+  const { guildId, channelId, containerHeight } = context.state;
 
-  /* Improve performance by filtering out messages that would be offscreen */
   const { y } = axes(context.state);
 
-  /* TODO: Optimize and clean up transition code */
-  if (transitionAlpha < 1) {
-    return messageManager({ guildId, channelId }).cache.filter((message) => {
-      const y_ = y(message);
-      return 0 < y_ && y_ < containerHeight;
-    });
-  }
+  const minY_ = minY ?? -context.state.yAxis.step;
+  const maxY_ = maxY ?? containerHeight + context.state.yAxis.step;
 
-  if (yAxis.type === "point") {
-    return y
-      ? messages.filter((message) => {
-          const y_ = y(message);
-          return -yAxis.step < y_ && y_ < containerHeight + yAxis.step;
-        })
-      : [];
-  }
-
-  return messages;
+  return messageManager({ guildId, channelId }).cache.filter((message) => {
+    const y_ = y(message);
+    return minY_ < y_ && y_ < maxY_;
+  });
 };
 
-export const useAxes = (yBounds?: [top: number, bottom: number]) =>
-  axes(useContext(MessageScrollerContext).state, yBounds);
+export const useAxes = (yBounds?: [top: number, bottom: number]) => {
+  const state = useContext(MessageScrollerContext).state;
+  return {
+    ...pick(axes(state, yBounds), ["y", "yScale"]),
+    ...pick(state, ["yAxis", "transitionAlpha", "transitionPivot"]),
+  };
+};
 
 export const useDispatch = () => {
   const { dispatch } = useContext(MessageScrollerContext);
@@ -529,10 +458,7 @@ export const MessageScroller = ({
   channelId,
   guildId,
   children,
-  defaultYAxis = {
-    type: "time",
-    domain: [Date.now() - DEFAULT_TIMESPAN, Date.now()],
-  },
+  defaultYAxis,
   showToolbar = false,
 }: React.PropsWithChildren<{
   channelId: string;
@@ -549,12 +475,19 @@ export const MessageScroller = ({
   const [state, dispatch] = useThunkReducer(reducer, {
     guildId,
     channelId,
-    yAxis: defaultYAxis,
-    messages: [],
+    yAxis: {
+      type: "time",
+      domain: [Date.now() - DEFAULT_TIMESPAN, Date.now()],
+      step: 60,
+      offset: 0,
+      originMessageId: null,
+      ...(defaultYAxis ?? {}),
+    },
     autoscroll: undefined,
     containerHeight: undefined,
     isExpanding: false,
     transitionAlpha: 1,
+    messageCount: 0,
   });
 
   const { autoscroll, yAxis } = state;
@@ -585,7 +518,7 @@ export const MessageScroller = ({
       const rc = setInterval(() => {
         const timespan = yAxis.domain[1] - yAxis.domain[0];
         const maxTime = Date.now();
-        dispatch(setTimeDomain([maxTime - timespan, maxTime], false));
+        dispatch(setTimeDomain([maxTime - timespan, maxTime]));
       }, 1000);
       return () => clearInterval(rc);
     }
@@ -596,8 +529,8 @@ export const MessageScroller = ({
     if (autoscroll) {
       const subscription = Sockets.subscribeToMessages(
         { guildId, channelId },
-        (message) => {
-          dispatch(unshiftMessages([message]));
+        () => {
+          dispatch(fastForward());
         }
       );
       return () => subscription.unsubscribe();
@@ -606,10 +539,10 @@ export const MessageScroller = ({
 
   const context = useMemo(() => ({ state, dispatch }), [
     state.yAxis,
-    state.messages,
     state.containerHeight,
     state.autoscroll,
     state.transitionAlpha,
+    state.messageCount,
     dispatch,
   ]);
 

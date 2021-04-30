@@ -1,6 +1,6 @@
 import io from "socket.io-client";
+import { rootURL } from "../common/utils";
 import { Message } from "../endpoints";
-import { rootURL } from "../utils";
 
 const URL = rootURL();
 const socket = io(URL, {

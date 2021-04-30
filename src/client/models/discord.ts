@@ -1,5 +1,5 @@
+import { cached, omitUndefined, singletonPromise } from "../../common/utils";
 import { Message, RequestBody, routes } from "../../endpoints";
-import { cached, omitUndefined, singletonPromise } from "../../utils";
 import { api } from "../api";
 
 export const fetchUser = cached((userId: string) =>
@@ -18,8 +18,14 @@ export const messageManager = cached(
 
 class MessageManager {
   private cache_: Message[] = [];
+  private relativeIndices = new Map<string, number>();
+  private referenceIndex = 0;
+
   get cache() {
-    return [...this.cache_];
+    return Object.assign(this.cache_ as readonly Message[], {
+      findIndexById: (id: string) => this.findIndexById(id),
+      last: () => this.last,
+    });
   }
 
   constructor(
@@ -36,8 +42,33 @@ class MessageManager {
     return this.cache_[0];
   }
 
+  private push(messages: Message[]) {
+    messages.forEach((message) => {
+      const i = this.cache_.length - this.referenceIndex;
+      this.cache_.push(message);
+      this.relativeIndices.set(message.id, i);
+    });
+  }
+
+  private unshift(messages: Message[]) {
+    [...messages].reverse().forEach((message) => {
+      this.referenceIndex++;
+      const i = -this.referenceIndex;
+
+      this.cache_.unshift(message);
+      this.relativeIndices.set(message.id, i);
+    });
+  }
+
+  private findIndexById(id: string) {
+    return this.relativeIndices.has(id)
+      ? this.relativeIndices.get(id) + this.referenceIndex
+      : -1;
+  }
+
   private findById(id: string) {
-    return this.cache_.find((message) => id === message.id);
+    const i = this.findIndexById(id);
+    return i === -1 ? null : this.cache_[i];
   }
 
   private hasReachedBeginning_: boolean;
@@ -51,7 +82,7 @@ class MessageManager {
    * Tries to fetch `this.pageSize` messages
    * @returns true if older messages may exist. false if oldest message has been loaded
    */
-  private expandBack = singletonPromise(async () => {
+  expandBack = singletonPromise(async () => {
     if (this.hasReachedBeginning_) return;
 
     const messages = await api(
@@ -63,7 +94,8 @@ class MessageManager {
         before: this.last?.id,
       }) as RequestBody[typeof routes.apiListMessages]
     );
-    this.cache_.push(...messages);
+
+    this.push(messages);
 
     const result = messages.length >= this.pageSize;
     this.hasReachedBeginning_ = !result;
@@ -90,7 +122,8 @@ class MessageManager {
         after: this.first?.id,
       }) as RequestBody[typeof routes.apiListMessages]
     );
-    this.cache_.unshift(...messages);
+
+    this.unshift(messages);
 
     const result = messages.length >= this.pageSize;
     return result;
@@ -120,7 +153,7 @@ class MessageManager {
   /**
    * Fetches all new messages and stores them in the cache
    */
-  private async fastForward() {
+  async fastForward() {
     while (await this.expandFront());
   }
 

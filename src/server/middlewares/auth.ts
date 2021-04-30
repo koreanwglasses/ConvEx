@@ -1,7 +1,7 @@
 import passport from "passport";
 import { Strategy } from "passport-discord";
+import { resolveEndpoint } from "../../common/utils";
 import { routes } from "../../endpoints";
-import { resolveEndpoint } from "../../utils";
 import * as localConfig from "../config.local";
 
 export const init = () => {

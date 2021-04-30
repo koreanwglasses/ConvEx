@@ -1,5 +1,5 @@
+import { ValueOf } from "../../common/utils";
 import { APIRoutes, RequestBody, ResponseBody } from "../../endpoints";
-import { ValueOf } from "../../utils";
 import { api, APIError } from "../api";
 import { useAwaitTo } from "./utility-hooks";
 

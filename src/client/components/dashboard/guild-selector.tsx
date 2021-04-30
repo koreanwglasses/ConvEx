@@ -11,8 +11,8 @@ import {
 import { Alert, Skeleton } from "@material-ui/lab";
 import React from "react";
 import { useRouteMatch } from "react-router-dom";
+import { join } from "../../../common/utils";
 import { Guild, routes } from "../../../endpoints";
-import { join } from "../../../utils";
 import { useAPI } from "../../hooks/use-api";
 import { UnstyledLink } from "../ui/unstyled-link";
 

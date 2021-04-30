@@ -1,6 +1,6 @@
+import { resolveEndpoint, ValueOf } from "../common/utils";
 import * as config from "../config";
 import { APIRoutes, RequestBody, ResponseBody } from "../endpoints";
-import { resolveEndpoint, ValueOf } from "../utils";
 
 export async function api<R extends ValueOf<APIRoutes>>(
   endpoint: R,

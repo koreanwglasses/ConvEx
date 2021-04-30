@@ -53,7 +53,7 @@ const Chart = () => {
     return Math.min(x, y);
   };
   const score = (message: Message) =>
-    analyses.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
+    analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
       .value ?? 0;
 
   while (true) {
@@ -201,7 +201,7 @@ const TransitionMessageList = ({
   return (
     <>
       <svg ref={svgRef} width={width} height={height} />
-      {pivot && (
+      {pivotMessage && (
         <MessageView
           message={pivotMessage}
           analysis={analyses?.get(pivot)}

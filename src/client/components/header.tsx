@@ -12,8 +12,8 @@ import {
 import { Skeleton } from "@material-ui/lab";
 import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
+import { resolveEndpoint } from "../../common/utils";
 import { routes } from "../../endpoints";
-import { resolveEndpoint } from "../../utils";
 import { useAPI } from "../hooks/use-api";
 import { UnstyledLink } from "./ui/unstyled-link";
 

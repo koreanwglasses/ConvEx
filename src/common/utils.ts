@@ -1,4 +1,8 @@
-import * as config from "./config";
+/**
+ * This file contains convenience methods to make code look cleaner
+ */
+
+import * as config from "../config";
 
 export const asyncFilter = async <T>(
   arr: T[],
@@ -79,9 +83,31 @@ export const pick = <T extends Record<string, unknown>, K extends keyof T>(
 export const hasDuplicates = (array: unknown[]) =>
   new Set(array).size !== array.length;
 
-export const minBy = <T>(arr: T[], key: (value: T) => unknown) =>
+export const minBy = <T>(arr: readonly T[], key: (value: T) => unknown) =>
   arr.length === 0
     ? undefined
     : arr.length === 1
     ? arr[0]
     : arr.reduce((a, b) => (key(b) < key(a) ? b : a));
+
+// export const createReducer = <S, A extends { type: string }>(handlers: {
+//   [type: string]: (state: S, action: unknown) => S;
+// }) => (state: S, action: A) =>
+//   action.type in handlers ? handlers[action.type](state, action) : state;
+
+type Action<
+  S,
+  H extends {
+    [type: string]: (state: S, action: unknown) => S;
+  }
+> = { [K in keyof H]: { type: K } & Parameters<H[K]>[1] }[keyof H];
+
+export const createReducer = <
+  S,
+  H extends {
+    [type: string]: (state: S, action: unknown) => S;
+  }
+>(
+  handlers: H
+) => (state: S, action: Action<S, H>) =>
+  action.type in handlers ? handlers[action.type](state, action) : state;
