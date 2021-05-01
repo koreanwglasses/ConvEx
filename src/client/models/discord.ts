@@ -1,4 +1,4 @@
-import { filterBetween_increasingMap } from "../../common/algorithms";
+import { filterBetween_nonDecreasingMap } from "../../common/algorithms";
 import { cached, omitUndefined, singletonPromise } from "../../common/utils";
 import { Message, RequestBody, routes } from "../../endpoints";
 import { api } from "../api";
@@ -166,7 +166,7 @@ class MessageManager {
     );
     while (this.lastExpandFrontTime < newestTime && (await this.expandFront()));
 
-    return filterBetween_increasingMap(
+    return filterBetween_nonDecreasingMap(
       this.cache_,
       (message) => -message.createdTimestamp,
       -newestTime,

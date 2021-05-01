@@ -1,7 +1,7 @@
 import { makeStyles } from "@material-ui/core";
 import * as d3 from "d3";
 import { Result } from "perspective-api-client";
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { MessageView } from "../message/message-view";
@@ -32,7 +32,7 @@ const Chart = () => {
     height - padding.bottom,
   ]);
 
-  let messages = useMessages();
+  const messages = useMessages();
   const analyses = useAnalyses(messages);
 
   /* Remove messages that run into each other */
@@ -55,29 +55,41 @@ const Chart = () => {
     analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
       .value ?? 0;
 
-  const messagesToShow = new Set<Message>();
-  messages.forEach((message1) => {
-    const overlapping = [...messagesToShow].filter(
-      (message2) => overlap(message1, message2) > 0.5
+  const messagesToShow = useMemo(() => {
+    const startTime = performance.now();
+    const messagesToShow: Message[] = [];
+    messages.forEach((message) => {
+      if (!messagesToShow.length) {
+        messagesToShow.push(message);
+        return;
+      }
+      const lastMessage = messagesToShow[messagesToShow.length - 1];
+      if (overlap(message, lastMessage) < 0.5) {
+        messagesToShow.push(message);
+        return;
+      }
+
+      if (score(message) > score(lastMessage)) {
+        messagesToShow[messagesToShow.length - 1] = message;
+      }
+    });
+    const endTime = performance.now();
+    console.log(
+      `Overlap filtering took ${endTime - startTime}ms for ${
+        messages.length
+      } messages or ${(endTime - startTime) / messages.length}ms per message`
     );
-
-    const maxScore = Math.max(...overlapping.map(score));
-
-    if (score(message1) > maxScore) {
-      overlapping.forEach((message2) => messagesToShow.delete(message2));
-      messagesToShow.add(message1);
-    }
-  });
-  messages = [...messagesToShow];
+    return messagesToShow;
+  }, [messages[0]?.id, messages.length && messages[messages.length - 1].id, y]);
 
   return transitionAlpha < 1 ? (
     <TransitionMessageList
-      messages={messages}
+      messages={messagesToShow}
       analyses={analyses}
       pivot={transitionPivot}
     />
   ) : (
-    <FullMessageList messages={messages} analyses={analyses} />
+    <FullMessageList messages={messagesToShow} analyses={analyses} />
   );
 };
 

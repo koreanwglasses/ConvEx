@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { unstable_batchedUpdates } from "react-dom";
 import useThunkReducer, { Thunk } from "react-hook-thunk-reducer";
-import { filterBetween_increasingMap } from "../../../common/algorithms";
+import { filterBetween_nonDecreasingMap } from "../../../common/algorithms";
 import { createReducer, minBy, pick } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { messageManager } from "../../models/discord";
@@ -429,18 +429,28 @@ export const useMessages = (minY?: number, maxY?: number) => {
   const maxY_ = maxY ?? containerHeight + yAxis.step;
 
   const { y } = axes(state);
-  if (!y) return [];
 
-  const cache = messageManager({ guildId, channelId }).cache;
-  return filterBetween_increasingMap(cache, y, minY_, maxY_);
+  return useMemo(() => {
+    if (!y) return [];
+    const cache = messageManager({ guildId, channelId }).cache;
+    return filterBetween_nonDecreasingMap(cache, y, minY_, maxY_);
+  }, [y, minY_, maxY_, state.messageCount]);
 };
 
 export const useAxes = (yBounds?: [top: number, bottom: number]) => {
   const state = useContext(MessageScrollerContext).state;
-  return {
-    ...pick(axes(state, yBounds), ["y", "yScale"]),
-    ...pick(state, ["yAxis", "transitionAlpha", "transitionPivot"]),
-  };
+  return useMemo(
+    () => ({
+      ...pick(axes(state, yBounds), ["y", "yScale"]),
+      ...pick(state, ["yAxis", "transitionAlpha", "transitionPivot"]),
+    }),
+    [
+      state.yAxis,
+      state.containerHeight,
+      state.transitionAlpha,
+      state.transitionPivot,
+    ]
+  );
 };
 
 export const useDispatch = () => {

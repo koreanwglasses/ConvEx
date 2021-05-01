@@ -3,6 +3,7 @@
  */
 
 import * as config from "../config";
+import { indexOfFirstPositive_nonDecreasingMap } from "./algorithms";
 
 export const asyncFilter = async <T>(
   arr: T[],
@@ -114,3 +115,56 @@ export const createReducer = <
   handlers: H
 ) => (state: S, action: Action<S, H>) =>
   action.type in handlers ? handlers[action.type](state, action) : state;
+
+export class RateLimiter {
+  private queue: (() => void)[] = [];
+  private history: number[] = [];
+  private flushing: boolean;
+
+  constructor(private limit = 1000, private timespan = 1000) {}
+
+  enqueue(callback: () => void) {
+    if (this.minDelay() === 0) this.exec(callback);
+    else {
+      this.queue.push(callback);
+      this.flushQueue();
+    }
+  }
+
+  ready() {
+    return new Promise<void>((res) => this.enqueue(res));
+  }
+
+  private exec(callback: () => void) {
+    this.history.push(Date.now());
+    callback();
+  }
+
+  private minDelay() {
+    const now = Date.now();
+    const i = indexOfFirstPositive_nonDecreasingMap(
+      this.history,
+      (x) => x - (now - this.timespan)
+    );
+    if (i === -1) return 0;
+
+    this.history = this.history.slice(i);
+    return this.history.length < this.limit
+      ? 0
+      : this.timespan - (now - this.history[0]);
+  }
+
+  private async flushQueue() {
+    if (!this.queue.length || this.flushing) return;
+    this.flushing = true;
+    const popExec = () => {
+      if (this.queue.length > 0) {
+        this.exec(this.queue.shift());
+        setTimeout(popExec, Math.ceil(this.timespan / this.limit));
+      } else {
+        this.flushing = false;
+      }
+    };
+    setTimeout(popExec, this.minDelay());
+  }
+}
