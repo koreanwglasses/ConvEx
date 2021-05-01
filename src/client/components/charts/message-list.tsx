@@ -55,10 +55,12 @@ const Chart = () => {
     analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
       .value ?? 0;
 
-  const messagesToShow = useMemo(() => {
-    if (yAxis.type === "point") return messages;
+  const overlapThreshold =
+    transitionAlpha < 1 && yAxis.type === "time" ? 0.5 : 0.2;
 
-    const startTime = performance.now();
+  const messagesToShow = useMemo(() => {
+    if (yAxis.type === "point" && transitionAlpha === 1) return messages;
+
     const messagesToShow: Message[] = [];
     messages.forEach((message) => {
       if (!messagesToShow.length) {
@@ -66,7 +68,7 @@ const Chart = () => {
         return;
       }
       const lastMessage = messagesToShow[messagesToShow.length - 1];
-      if (overlap(message, lastMessage) < 0.5) {
+      if (overlap(message, lastMessage) < overlapThreshold) {
         messagesToShow.push(message);
         return;
       }
@@ -75,14 +77,15 @@ const Chart = () => {
         messagesToShow[messagesToShow.length - 1] = message;
       }
     });
-    const endTime = performance.now();
-    console.log(
-      `Overlap filtering took ${endTime - startTime}ms for ${
-        messages.length
-      } messages or ${(endTime - startTime) / messages.length}ms per message`
-    );
     return messagesToShow;
-  }, [messages[0]?.id, messages.length && messages[messages.length - 1].id, y]);
+  }, [
+    messages[0]?.id,
+    messages.length && messages[messages.length - 1].id,
+    y,
+    analyses,
+    overlapThreshold,
+    transitionAlpha
+  ]);
 
   return transitionAlpha < 1 ? (
     <TransitionMessageList
