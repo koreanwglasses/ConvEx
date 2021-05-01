@@ -433,7 +433,12 @@ export const useMessages = (minY?: number, maxY?: number) => {
   return useMemo(() => {
     if (!y) return [];
     const cache = messageManager({ guildId, channelId }).cache;
-    return filterBetween_nonDecreasingMap(cache, y, minY_, maxY_);
+    return filterBetween_nonDecreasingMap(
+      cache,
+      (message) => -y(message),
+      -maxY_,
+      -minY_
+    );
   }, [y, minY_, maxY_, state.messageCount]);
 };
 

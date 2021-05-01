@@ -63,14 +63,14 @@ export const filterBetween_nonDecreasingMap = <T>(
 ) => {
   const start = indexOfFirstPositive_nonDecreasingMap(
     arr,
-    (value) => max - mapFunc(value),
+    (value) => mapFunc(value) - min,
     method
   );
   if (start === -1) return [];
 
   const end = indexOfFirstPositive_nonDecreasingMap(
     arr,
-    (value) => min - mapFunc(value),
+    (value) => mapFunc(value) - max,
     method
   );
   return arr.slice(start, end === -1 ? arr.length : end);

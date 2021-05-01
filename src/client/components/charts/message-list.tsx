@@ -27,7 +27,7 @@ const messageHeight = 56;
 
 const Chart = () => {
   const { height } = useChartSize();
-  const { y, transitionAlpha, transitionPivot } = useAxes([
+  const { y, transitionAlpha, transitionPivot, yAxis } = useAxes([
     padding.top,
     height - padding.bottom,
   ]);
@@ -56,6 +56,8 @@ const Chart = () => {
       .value ?? 0;
 
   const messagesToShow = useMemo(() => {
+    if (yAxis.type === "point") return messages;
+
     const startTime = performance.now();
     const messagesToShow: Message[] = [];
     messages.forEach((message) => {
