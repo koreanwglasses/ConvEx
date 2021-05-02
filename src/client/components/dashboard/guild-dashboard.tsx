@@ -40,7 +40,7 @@ const useStyles = makeStyles((theme) => ({
   },
   channelCard: {
     width: 400,
-    height: 800,
+    height: "fit-content",
     marginBottom: theme.spacing(2),
   },
 }));

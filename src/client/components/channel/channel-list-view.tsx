@@ -14,6 +14,7 @@ export const ChannelListView = ({
     guildId={guildId}
     channelId={channelId}
     defaultYAxis={{ type: "point", offset: 0, step: 60 }}
+    height={600}
   >
     <MessageList />
   </MessageScroller>

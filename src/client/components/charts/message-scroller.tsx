@@ -540,11 +540,13 @@ export const MessageScroller = ({
   children,
   defaultYAxis,
   showToolbar = false,
+  height,
 }: React.PropsWithChildren<{
   channelId: string;
   guildId: string;
   defaultYAxis?: State["yAxis"];
   showToolbar?: boolean;
+  height?: string | number;
 }>) => {
   const classes = useStyles();
   const containerRef = useRef<HTMLDivElement>();
@@ -587,13 +589,15 @@ export const MessageScroller = ({
     const updateHeight = () =>
       dispatch(
         setContainerHeight(
-          Math.max(
-            window.innerHeight -
-              window.pageYOffset -
-              containerRef.current.getBoundingClientRect().top -
-              32,
-            400
-          )
+          height
+            ? containerRef.current.clientHeight
+            : Math.max(
+                window.innerHeight -
+                  window.pageYOffset -
+                  containerRef.current.getBoundingClientRect().top -
+                  32,
+                400
+              )
         )
       );
 
@@ -644,7 +648,7 @@ export const MessageScroller = ({
       <div
         ref={containerRef}
         style={{
-          height: state.containerHeight,
+          height: height ?? state.containerHeight,
         }}
         className={classes.container}
       >
