@@ -84,7 +84,7 @@ const Chart = () => {
     y,
     analyses,
     overlapThreshold,
-    transitionAlpha
+    transitionAlpha,
   ]);
 
   return transitionAlpha < 1 ? (

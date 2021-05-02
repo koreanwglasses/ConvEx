@@ -168,3 +168,13 @@ export class RateLimiter {
     setTimeout(popExec, this.minDelay());
   }
 }
+
+export const groupBy = <T>(arr: T[], key: (value: T) => unknown) => {
+  const groups = new Map<unknown, T[]>();
+  arr.forEach((value) => {
+    const key_ = key(value);
+    if (!groups.has(key_)) groups.set(key_, [value]);
+    else groups.get(key_).push(value);
+  });
+  return groups;
+};

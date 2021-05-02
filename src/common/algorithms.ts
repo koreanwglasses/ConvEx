@@ -3,9 +3,9 @@
  */
 
 /**
- * Finds the index of the first element that maps to a positive value.  The
- * values in the array must map to non-decreasing (i.e. increasing or equal)
- * values.
+ * Finds the index of the first element that maps to a positive value.
+ * Successive values in arr must satisfy be non decreasing, i.e. for i < j,
+ * mapFunc(arr[i]) <= mapFunc(arr[j])
  *
  * Choose the method "BISECTION" or "FALSE_POSITION" based on the expected distrib
  */
