@@ -1,3 +1,4 @@
+import to from "await-to-js";
 import { Client, Message, PermissionString } from "discord.js";
 import * as localConfig from "../config.local";
 
@@ -32,7 +33,9 @@ export const hasPermission = async (
   permission?: Permission
 ) => {
   const guild = await client.guilds.fetch(guildId);
-  const member = await guild.members.fetch(userId);
+  /* TODO: Better error checking. Figure out which error specifically means
+   * member is not in server. */
+  const [, member] = await to(guild.members.fetch(userId));
 
   if (!member) return false;
   if (permission === "IS_MEMBER") return true;
@@ -57,7 +60,9 @@ export const hasPermissions = async (
   permissions: Permission[]
 ) => {
   const guild = await client.guilds.fetch(guildId);
-  const member = await guild.members.fetch(userId);
+  /* TODO: Better error checking. Figure out which error specifically means
+   * member is not in server. */
+  const [, member] = await to(guild.members.fetch(userId));
 
   if (!member) return false;
 
