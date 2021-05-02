@@ -8,7 +8,8 @@
     "dev:server": "cross-env NODE_ENV=development nodemon",
     "dev": "npm-run-all --parallel dev:precompile dev:client dev:server",
     "remote-dev:server": "cross-env NODE_ENV=remote-development nodemon",
-    "remote-dev:client": "cross-env NODE_ENV=remote-development webpack serve --config webpack.dev.js --history-api-fallback"
+    "remote-dev:client": "cross-env NODE_ENV=remote-development webpack serve --config webpack.dev.js --history-api-fallback",
+    "start:server": "ts-node src/server/index.ts"
   },
   "dependencies": {
     "@material-ui/core": "^4.11.4",
