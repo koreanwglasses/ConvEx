@@ -14,7 +14,7 @@ export const Home = () => {
     <Layout>
       <Container maxWidth="sm" className={classes.heroContent}>
         <Typography component="h1" variant="h2" align="center" gutterBottom>
-          Concord
+          <b>Conv</b>ersation <b>Ex</b>plorer
         </Typography>
         <Typography
           variant="h5"

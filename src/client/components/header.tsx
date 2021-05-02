@@ -45,10 +45,10 @@ const Title = () => {
     <div className={classes.toolbarTitle}>
       <UnstyledLink to={"/"}>
         <Box fontWeight={700} component="span">
-          CON
+          CONV
         </Box>
         <Box fontWeight={200} component="span">
-          CORD
+          EX
         </Box>
       </UnstyledLink>
     </div>
