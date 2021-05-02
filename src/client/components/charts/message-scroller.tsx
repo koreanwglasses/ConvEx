@@ -451,7 +451,7 @@ export const useAxes = (yBounds?: [top: number, bottom: number]) => {
   const state = useContext(MessageScrollerContext).state;
   return useMemo(
     () => ({
-      ...pick(axes(state, yBounds), ["y", "yScale"]),
+      ...pick(axes(state, yBounds), ["y", "yScale", "yTime"]),
       ...pick(state, ["yAxis", "transitionAlpha", "transitionPivot"]),
     }),
     [
