@@ -5,7 +5,12 @@ import { groupBy } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { ChartContainer, useChartSize } from "./chart-container";
-import { useAxes, useFocus, useMessages } from "./message-scroller";
+import {
+  useAxes,
+  useDispatch,
+  useFocus,
+  useMessages,
+} from "./message-scroller";
 
 export const UserLines = () => (
   <ChartContainer>
@@ -48,9 +53,10 @@ const Chart = () => {
   const data = [...groupBy(flatData, ([message]) => message.authorID).values()];
 
   const [focus, setFocus] = useFocus();
+  const { setYAxisType } = useDispatch();
 
   const pointRadius = 6;
-  const interactionRadius = 18;
+  const interactionRadius = 24;
 
   if (selections.current && data) {
     /* Drawing. Runs whenever height, width, data, etc. are updated */
@@ -115,7 +121,8 @@ const Chart = () => {
       .attr("r", interactionRadius)
       .style("fill", "transparent")
       .on("mouseenter", (event, [message]) => setFocus(message))
-      .on("mouseleave", () => setFocus(null));
+      .on("mouseleave", () => setFocus(null))
+      .on("dblclick", (event, [message]) => setYAxisType("point", message.id));
   }
 
   return <svg ref={svgRef} width={width} height={height} />;

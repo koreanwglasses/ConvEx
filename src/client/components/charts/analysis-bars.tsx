@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import React, { useEffect, useRef } from "react";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { ChartContainer, useChartSize } from "../charts/chart-container";
-import { useAxes, useFocus, useMessages } from "../charts/message-scroller";
+import { useAxes, useDispatch, useFocus, useMessages } from "../charts/message-scroller";
 
 export const AnalysesBars = () => (
   <ChartContainer>
@@ -42,6 +42,7 @@ const Chart = () => {
   const barHeight = 20;
 
   const [focus, setFocus] = useFocus();
+  const { setYAxisType } = useDispatch();
 
   if (selections.current && data) {
     /* Drawing. Runs whenever height, width, data, etc. are updated */
@@ -68,6 +69,7 @@ const Chart = () => {
       )
       .on("mouseenter", (event, [message]) => setFocus(message))
       .on("mouseleave", () => setFocus(null))
+      .on("dblclick", (event, [message]) => setYAxisType("point", message.id))
       .transition()
       .attr("opacity", ([message]) =>
         !focus || message.authorID === focus.authorID ? 1 : 0.1

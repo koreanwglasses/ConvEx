@@ -130,7 +130,7 @@ const FullMessageList = ({
   const classes = useStyles();
 
   const { width, height } = useChartSize();
-  const { y, yAxis } = useAxes([padding.top, height - padding.bottom]);
+  const { y } = useAxes([padding.top, height - padding.bottom]);
   const { setYAxisType } = useDispatch();
 
   const removedMessages = useRef(new Map<Message, NodeJS.Timeout>());
@@ -181,9 +181,7 @@ const FullMessageList = ({
               width,
               opacity: removedMessages.current.has(message)
                 ? 0
-                : yAxis.type === "point" ||
-                  !focus ||
-                  focus.authorID === message.authorID
+                : !focus || focus.authorID === message.authorID
                 ? 1
                 : 0.1,
               pointerEvents: removedMessages.current.has(message)
