@@ -22,8 +22,8 @@ export const ChannelListView = ({
     <YAxis />
     <MessageList />
     <YAxis compact />
-    <AnalysesBars />
+    <AnalysesBars showScale />
     <YAxis compact />
-    <UserLines />
+    <UserLines showScale />
   </MessageScroller>
 );
