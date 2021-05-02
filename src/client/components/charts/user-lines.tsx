@@ -33,6 +33,7 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
   const svgRef = useRef<SVGSVGElement>();
   const selections = useRef<{
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    lineG: d3.Selection<SVGGElement, unknown, null, undefined>;
     circleG: d3.Selection<SVGGElement, unknown, null, undefined>;
     interactionG: d3.Selection<SVGGElement, unknown, null, undefined>;
     xAxisG: d3.Selection<SVGGElement, unknown, null, undefined>;
@@ -42,11 +43,19 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
   useEffect(() => {
     /* Initialization. Runs once */
     const svg = d3.select(svgRef.current);
+    const lineG = svg.append("g");
     const circleG = svg.append("g");
     const interactionG = svg.append("g");
     const xAxisG = svg.append("g");
     const xAxisLabelText = svg.append("text");
-    selections.current = { svg, circleG, interactionG, xAxisLabelText, xAxisG };
+    selections.current = {
+      svg,
+      lineG,
+      circleG,
+      interactionG,
+      xAxisLabelText,
+      xAxisG,
+    };
   }, []);
 
   const messages = useMessages();
@@ -65,14 +74,14 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
   if (selections.current && data) {
     /* Drawing. Runs whenever height, width, data, etc. are updated */
     const {
-      svg,
       circleG,
       interactionG,
       xAxisG,
       xAxisLabelText,
+      lineG,
     } = selections.current;
 
-    svg
+    lineG
       .selectAll("path")
       .data(data)
       .join("path")

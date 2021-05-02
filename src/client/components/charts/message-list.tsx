@@ -146,7 +146,7 @@ const FullMessageList = ({
         message,
         setTimeout(() => {
           removedMessages.current.delete(message);
-        }, 500)
+        }, 250)
       );
     }
   });
