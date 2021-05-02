@@ -9,13 +9,17 @@ import {
   useMessages,
 } from "../charts/message-scroller";
 
-export const AnalysesBars = () => (
+export const AnalysesBars = ({
+  showScale = false,
+}: {
+  showScale?: boolean;
+}) => (
   <ChartContainer>
-    <Chart />
+    <Chart showScale={showScale} />
   </ChartContainer>
 );
 
-const Chart = () => {
+const Chart = ({ showScale }: { showScale: boolean }) => {
   const { width, height } = useChartSize();
 
   const padding = { left: 0, top: 20, bottom: 20, right: 20 };
@@ -30,12 +34,18 @@ const Chart = () => {
   const svgRef = useRef<SVGSVGElement>();
   const selections = useRef<{
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
+    barsG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xAxisG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xAxisLabelText: d3.Selection<SVGTextElement, unknown, null, undefined>;
   }>();
 
   useEffect(() => {
     /* Initialization. Runs once */
     const svg = d3.select(svgRef.current);
-    selections.current = { svg };
+    const barsG = svg.append("g");
+    const xAxisG = svg.append("g");
+    const xAxisLabelText = svg.append("text");
+    selections.current = { svg, barsG, xAxisG, xAxisLabelText };
   }, []);
 
   const messages = useMessages();
@@ -51,9 +61,9 @@ const Chart = () => {
 
   if (selections.current && data) {
     /* Drawing. Runs whenever height, width, data, etc. are updated */
-    const { svg } = selections.current;
+    const { barsG, xAxisG, xAxisLabelText } = selections.current;
 
-    svg
+    barsG
       .selectAll("rect")
       .data(data, ([message]) => message.id)
       .join("rect")
@@ -81,6 +91,22 @@ const Chart = () => {
       .attr("opacity", ([message]) =>
         !focus || message.authorID === focus.authorID ? 1 : 0.1
       );
+
+    if (showScale) {
+      xAxisG
+        .call(d3.axisBottom(x))
+        .attr("transform", `translate(${padding.left}, ${padding.top})`); // TODO xTranslation
+
+      xAxisLabelText
+        .attr("font-size", 12)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("x", width / 2)
+        .attr("y", padding.top / 2)
+        .text("Toxicity Score")
+        .style("text-anchor", "middle")
+        .style("fill", "white");
+    }
   }
 
   return <svg ref={svgRef} width={width} height={height} />;

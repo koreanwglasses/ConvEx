@@ -12,13 +12,13 @@ import {
   useMessages,
 } from "./message-scroller";
 
-export const UserLines = () => (
+export const UserLines = ({ showScale = false }: { showScale?: boolean }) => (
   <ChartContainer>
-    <Chart />
+    <Chart showScale={showScale} />
   </ChartContainer>
 );
 
-const Chart = () => {
+const Chart = ({ showScale }: { showScale: boolean }) => {
   const { width, height } = useChartSize();
 
   const padding = { left: 0, top: 20, bottom: 20, right: 20 };
@@ -35,6 +35,8 @@ const Chart = () => {
     svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
     circleG: d3.Selection<SVGGElement, unknown, null, undefined>;
     interactionG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xAxisG: d3.Selection<SVGGElement, unknown, null, undefined>;
+    xAxisLabelText: d3.Selection<SVGTextElement, unknown, null, undefined>;
   }>();
 
   useEffect(() => {
@@ -42,7 +44,9 @@ const Chart = () => {
     const svg = d3.select(svgRef.current);
     const circleG = svg.append("g");
     const interactionG = svg.append("g");
-    selections.current = { svg, circleG, interactionG };
+    const xAxisG = svg.append("g");
+    const xAxisLabelText = svg.append("text");
+    selections.current = { svg, circleG, interactionG, xAxisLabelText, xAxisG };
   }, []);
 
   const messages = useMessages();
@@ -60,7 +64,13 @@ const Chart = () => {
 
   if (selections.current && data) {
     /* Drawing. Runs whenever height, width, data, etc. are updated */
-    const { svg, circleG, interactionG } = selections.current;
+    const {
+      svg,
+      circleG,
+      interactionG,
+      xAxisG,
+      xAxisLabelText,
+    } = selections.current;
 
     svg
       .selectAll("path")
@@ -125,6 +135,22 @@ const Chart = () => {
       .on("dblclick", (event, [message]) =>
         setYAxisType(yAxis.type === "point" ? "time" : "point", message.id)
       );
+
+    if (showScale) {
+      xAxisG
+        .call(d3.axisBottom(x))
+        .attr("transform", `translate(${padding.left}, ${padding.top})`); // TODO xTranslation
+
+      xAxisLabelText
+        .attr("font-size", 12)
+        .attr("font-weight", "bold")
+        .attr("font-family", "sans-serif")
+        .attr("x", width / 2)
+        .attr("y", padding.top / 2)
+        .text("Toxicity Score")
+        .style("text-anchor", "middle")
+        .style("fill", "white");
+    }
   }
 
   return <svg ref={svgRef} width={width} height={height} />;
