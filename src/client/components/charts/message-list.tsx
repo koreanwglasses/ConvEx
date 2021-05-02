@@ -16,9 +16,8 @@ import {
 
 const useStyles = makeStyles((theme) => ({
   listContainer: {
-    display: "flex",
-    flexDirection: "column-reverse",
-    minHeight: "70vh",
+    position: "relative",
+    overflow: "hidden",
   },
 }));
 
@@ -164,10 +163,7 @@ const FullMessageList = ({
 
   const [focus, setFocus] = useFocus();
   return (
-    <div
-      className={classes.listContainer}
-      style={{ position: "relative", overflow: "hidden", width, height }}
-    >
+    <div className={classes.listContainer} style={{ width, height }}>
       {[...messages, ...removedMessages.current.keys()]
         .sort((a, b) => +a.id - +b.id)
         .map((message) => (

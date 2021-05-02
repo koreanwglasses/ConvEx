@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import mergeRefs from "react-merge-refs";
-import { useDispatch } from "./message-scroller";
+import { useContainerSize, useDispatch } from "./message-scroller";
 
 const ChartContainerContext = createContext<{ width: number; height: number }>({
   width: undefined,
@@ -34,6 +34,8 @@ export const ChartContainer = React.forwardRef(
       undefined as number,
       undefined as number,
     ]);
+
+    const { containerHeight } = useContainerSize();
     useEffect(() => {
       const updateSize = () => {
         setSize([
@@ -45,7 +47,7 @@ export const ChartContainer = React.forwardRef(
 
       addEventListener("resize", updateSize);
       return () => removeEventListener("resize", updateSize);
-    }, []);
+    }, [containerHeight]);
 
     const { scroll } = useDispatch();
     useEffect(() => {

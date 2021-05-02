@@ -490,6 +490,9 @@ export const useFocus = () => {
   return useMemo(() => [focus, setFocus] as const, [focus]);
 };
 
+export const useContainerSize = () =>
+  pick(useContext(MessageScrollerContext).state, ["containerHeight"]);
+
 ///////////////
 // Component //
 ///////////////
@@ -544,7 +547,17 @@ export const MessageScroller = ({
   /* Keep track of height */
   useEffect(() => {
     const updateHeight = () =>
-      dispatch(setContainerHeight(containerRef.current.clientHeight));
+      dispatch(
+        setContainerHeight(
+          Math.max(
+            window.innerHeight -
+              window.pageYOffset -
+              containerRef.current.getBoundingClientRect().top -
+              32,
+            400
+          )
+        )
+      );
 
     updateHeight();
 
@@ -594,7 +607,7 @@ export const MessageScroller = ({
         ref={containerRef}
         style={{
           width: "100%",
-          height: "75vh",
+          height: state.containerHeight,
           display: "flex",
           position: "relative",
           alignItems: "stretch",
