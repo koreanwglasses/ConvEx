@@ -147,7 +147,7 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
         .attr("font-family", "sans-serif")
         .attr("x", width / 2)
         .attr("y", padding.top / 2)
-        .text("Toxicity Score")
+        .text("Toxicity Probability")
         .style("text-anchor", "middle")
         .style("fill", "white");
     }
