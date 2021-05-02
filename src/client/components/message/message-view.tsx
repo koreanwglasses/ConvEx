@@ -22,7 +22,7 @@ const useStyles = makeStyles((theme) => ({
     height: "fit-content",
     opacity: 0,
     transition: "max-height 500ms, opacity 250ms",
-    animation: "$fadeIn 500ms",
+    animation: "$fadeIn 250ms",
     overflow: "hidden",
     boxSizing: "border-box",
     borderRadius: 28,
