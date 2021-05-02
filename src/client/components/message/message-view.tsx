@@ -11,12 +11,18 @@ const useStyles = makeStyles((theme) => ({
   censored: {
     filter: "blur(3px)",
   },
+  "@keyframes fadeIn": {
+    from: { opacity: 0 },
+    to: { opacity: 1 },
+  },
   root: {
     padding: theme.spacing(1),
     display: "flex",
     maxHeight: 56,
     height: "fit-content",
-    transition: "max-height 300ms",
+    opacity: 0,
+    transition: "max-height 500ms, opacity 500ms",
+    // animation: "$fadeIn 500ms",
     overflow: "hidden",
     boxSizing: "border-box",
     borderRadius: 28,

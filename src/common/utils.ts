@@ -178,3 +178,11 @@ export const groupBy = <T>(arr: T[], key: (value: T) => unknown) => {
   });
   return groups;
 };
+
+export const compareTuple = <T extends unknown[]>(a: [...T], b: [...T]) => {
+  for (let i = 0; i < a.length; i++) {
+    if (a[i] < b[i]) return -1;
+    if (a[i] > b[i]) return 1;
+  }
+  return 0;
+};

@@ -2,11 +2,17 @@ import { makeStyles } from "@material-ui/core";
 import * as d3 from "d3";
 import { Result } from "perspective-api-client";
 import React, { useEffect, useMemo, useRef } from "react";
+import { compareTuple } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { MessageView } from "../message/message-view";
 import { ChartContainer, useChartSize } from "./chart-container";
-import { useAxes, useDispatch, useMessages } from "./message-scroller";
+import {
+  useAxes,
+  useDispatch,
+  useFocus,
+  useMessages,
+} from "./message-scroller";
 
 const useStyles = makeStyles((theme) => ({
   listContainer: {
@@ -34,6 +40,8 @@ const Chart = () => {
 
   const messages = useMessages();
   const analyses = useAnalyses(messages);
+
+  const [focus] = useFocus();
 
   /* Remove messages that run into each other */
   const computeBounds = (message: Message) => {
@@ -73,7 +81,14 @@ const Chart = () => {
         return;
       }
 
-      if (score(message) > score(lastMessage)) {
+      const isFocused = message.authorID === focus?.authorID;
+      const isLastFocused = lastMessage.authorID === focus?.authorID;
+      if (
+        compareTuple(
+          [isFocused, score(message)],
+          [isLastFocused, score(lastMessage)]
+        ) > 0
+      ) {
         messagesToShow[messagesToShow.length - 1] = message;
       }
     });
@@ -85,6 +100,7 @@ const Chart = () => {
     analyses,
     overlapThreshold,
     transitionAlpha,
+    focus,
   ]);
 
   return transitionAlpha < 1 ? (
@@ -114,29 +130,73 @@ const FullMessageList = ({
   const classes = useStyles();
 
   const { width, height } = useChartSize();
-  const { y } = useAxes([padding.top, height - padding.bottom]);
+  const { y, yAxis } = useAxes([padding.top, height - padding.bottom]);
   const { setYAxisType } = useDispatch();
 
+  const removedMessages = useRef(new Map<Message, NodeJS.Timeout>());
+  const prevMessages = useRef(new Set<Message>());
+  const currentMessages = new Set(messages);
+
+  /** Determine which messages were removed and add to remove list */
+  prevMessages.current.forEach((message) => {
+    if (
+      !currentMessages.has(message) &&
+      !removedMessages.current.has(message)
+    ) {
+      removedMessages.current.set(
+        message,
+        setTimeout(() => {
+          removedMessages.current.delete(message);
+        }, 500)
+      );
+    }
+  });
+
+  /** Determine which removed messages are back */
+  removedMessages.current.forEach((_, message) => {
+    if (currentMessages.has(message)) {
+      clearTimeout(removedMessages.current.get(message));
+      removedMessages.current.delete(message);
+    }
+  });
+
+  prevMessages.current = currentMessages;
+
+  const [focus, setFocus] = useFocus();
   return (
     <div
       className={classes.listContainer}
       style={{ position: "relative", overflow: "hidden", width, height }}
     >
-      {messages.map((message) => (
-        <MessageView
-          key={message.id}
-          message={message}
-          analysis={analyses?.get(message.id)}
-          style={{
-            top: y?.(message) - messageHeight / 2,
-            position: "absolute",
-            width,
-          }}
-          onDoubleClick={() => {
-            setYAxisType("point", message.id);
-          }}
-        />
-      ))}
+      {[...messages, ...removedMessages.current.keys()]
+        .sort((a, b) => +a.id - +b.id)
+        .map((message) => (
+          <MessageView
+            key={message.id}
+            message={message}
+            analysis={analyses?.get(message.id)}
+            style={{
+              top: y?.(message) - messageHeight / 2,
+              position: "absolute",
+              width,
+              opacity: removedMessages.current.has(message)
+                ? 0
+                : yAxis.type === "point" ||
+                  !focus ||
+                  focus.authorID === message.authorID
+                ? 1
+                : 0.1,
+              pointerEvents: removedMessages.current.has(message)
+                ? "none"
+                : undefined,
+            }}
+            onDoubleClick={() => {
+              setYAxisType("point", message.id);
+            }}
+            onMouseEnter={() => setFocus(message)}
+            onMouseLeave={() => setFocus()}
+          />
+        ))}
     </div>
   );
 };

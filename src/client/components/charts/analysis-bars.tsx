@@ -2,7 +2,7 @@ import * as d3 from "d3";
 import React, { useEffect, useRef } from "react";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { ChartContainer, useChartSize } from "../charts/chart-container";
-import { useAxes, useMessages } from "../charts/message-scroller";
+import { useAxes, useFocus, useMessages } from "../charts/message-scroller";
 
 export const AnalysesBars = () => (
   <ChartContainer>
@@ -39,6 +39,10 @@ const Chart = () => {
     (message) => [message, analyses?.get(message.id)?.result] as const
   );
 
+  const barHeight = 20;
+
+  const [focus, setFocus] = useFocus();
+
   if (selections.current && data) {
     /* Drawing. Runs whenever height, width, data, etc. are updated */
     const { svg } = selections.current;
@@ -47,21 +51,26 @@ const Chart = () => {
       .selectAll("rect")
       .data(data, ([message]) => message.id)
       .join("rect")
-      // .transition()
       .attr("x", x(0))
       .attr(
         "width",
         ([, analysis]) =>
           x(analysis?.attributeScores.TOXICITY.summaryScore.value || 0) - x(0)
       )
-      .attr("y", ([message]) => y(message) - 5)
-      .attr("height", 10)
+      .attr("y", ([message]) => y(message) - barHeight / 2)
+      .attr("height", barHeight)
       .attr("fill", ([, analysis]) =>
         analysis
           ? d3.interpolateYlOrRd(
               analysis.attributeScores.TOXICITY.summaryScore.value
             )
           : "white"
+      )
+      .on("mouseenter", (event, [message]) => setFocus(message))
+      .on("mouseleave", () => setFocus(null))
+      .transition()
+      .attr("opacity", ([message]) =>
+        !focus || message.authorID === focus.authorID ? 1 : 0.1
       );
   }
 

@@ -40,6 +40,7 @@ type State = {
   transitionAlpha: number;
   transitionPivot?: string;
   messageCount: number;
+  focus?: Message;
 };
 
 type Action = Parameters<typeof reducer>[1];
@@ -82,6 +83,10 @@ const reducer = createReducer({
       );
     }
     return { ...state, isExpanding: action.value };
+  },
+
+  setFocus(state: State, action: { focus?: Message }) {
+    return { ...state, focus: action.focus };
   },
 
   setYAxisType(
@@ -475,6 +480,16 @@ export const useDispatch = () => {
   return dispatches;
 };
 
+export const useFocus = () => {
+  const { state, dispatch } = useContext(MessageScrollerContext);
+  const setFocus = useMemo(
+    () => (focus?: Message) => dispatch({ type: "setFocus", focus }),
+    [dispatch]
+  );
+  const focus = state.focus;
+  return useMemo(() => [focus, setFocus] as const, [focus]);
+};
+
 ///////////////
 // Component //
 ///////////////
@@ -568,6 +583,7 @@ export const MessageScroller = ({
     state.autoscroll,
     state.transitionAlpha,
     state.messageCount,
+    state.focus,
     dispatch,
   ]);
 
