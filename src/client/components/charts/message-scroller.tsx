@@ -1,3 +1,4 @@
+import { fade, makeStyles } from "@material-ui/core";
 import * as d3 from "d3";
 import React, {
   createContext,
@@ -497,6 +498,42 @@ export const useContainerSize = () =>
 // Component //
 ///////////////
 
+const useStyles = makeStyles((theme) => ({
+  container: {
+    width: "100%",
+    position: "relative",
+  },
+  flexContainer: {
+    display: "flex",
+    alignItems: "stretch",
+    height: "100%",
+  },
+  overlayBottom: {
+    position: "absolute",
+    zIndex: 1,
+    bottom: 0,
+    left: 0,
+    pointerEvents: "none",
+    backgroundImage: `linear-gradient(to bottom, 
+                    ${fade(theme.palette.background.default, 0)}, 
+                    ${theme.palette.background.default} 90%)`,
+    width: "100%",
+    height: "20px",
+  },
+  overlayTop: {
+    position: "absolute",
+    zIndex: 1,
+    top: 0,
+    left: 0,
+    pointerEvents: "none",
+    backgroundImage: `linear-gradient(to bottom, 
+                    ${theme.palette.background.default}, 
+                    ${fade(theme.palette.background.default, 0)} 90%)`,
+    width: "100%",
+    height: "20px",
+  },
+}));
+
 export const MessageScroller = ({
   channelId,
   guildId,
@@ -509,6 +546,7 @@ export const MessageScroller = ({
   defaultYAxis?: State["yAxis"];
   showToolbar?: boolean;
 }>) => {
+  const classes = useStyles();
   const containerRef = useRef<HTMLDivElement>();
 
   ///////////
@@ -606,14 +644,13 @@ export const MessageScroller = ({
       <div
         ref={containerRef}
         style={{
-          width: "100%",
           height: state.containerHeight,
-          display: "flex",
-          position: "relative",
-          alignItems: "stretch",
         }}
+        className={classes.container}
       >
-        {children}
+        <div className={classes.flexContainer}>{children}</div>
+        <div className={classes.overlayTop} />
+        <div className={classes.overlayBottom} />
       </div>
     </MessageScrollerContext.Provider>
   );

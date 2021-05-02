@@ -99,12 +99,11 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
 
       xAxisLabelText
         .attr("font-size", 12)
-        .attr("font-weight", "bold")
         .attr("font-family", "sans-serif")
-        .attr("x", width / 2)
-        .attr("y", padding.top / 2)
+        .attr("x", width - padding.right)
+        .attr("y", padding.top + 32)
         .text("Toxicity Probability")
-        .style("text-anchor", "middle")
+        .style("text-anchor", "end")
         .style("fill", "white");
     }
   }
