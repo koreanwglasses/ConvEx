@@ -2,7 +2,12 @@ import * as d3 from "d3";
 import React, { useEffect, useRef } from "react";
 import { useAnalyses } from "../../hooks/use-analyses";
 import { ChartContainer, useChartSize } from "../charts/chart-container";
-import { useAxes, useDispatch, useFocus, useMessages } from "../charts/message-scroller";
+import {
+  useAxes,
+  useDispatch,
+  useFocus,
+  useMessages,
+} from "../charts/message-scroller";
 
 export const AnalysesBars = () => (
   <ChartContainer>
@@ -15,7 +20,7 @@ const Chart = () => {
 
   const padding = { left: 0, top: 20, bottom: 20, right: 20 };
 
-  const { y } = useAxes([padding.top, height - padding.bottom]);
+  const { y, yAxis } = useAxes([padding.top, height - padding.bottom]);
 
   const x = d3
     .scaleLinear()
@@ -69,7 +74,9 @@ const Chart = () => {
       )
       .on("mouseenter", (event, [message]) => setFocus(message))
       .on("mouseleave", () => setFocus(null))
-      .on("dblclick", (event, [message]) => setYAxisType("point", message.id))
+      .on("dblclick", (event, [message]) =>
+        setYAxisType(yAxis.type === "point" ? "time" : "point", message.id)
+      )
       .transition()
       .attr("opacity", ([message]) =>
         !focus || message.authorID === focus.authorID ? 1 : 0.1

@@ -23,7 +23,7 @@ const Chart = () => {
 
   const padding = { left: 0, top: 20, bottom: 20, right: 20 };
 
-  const { y } = useAxes([padding.top, height - padding.bottom]);
+  const { y, yAxis } = useAxes([padding.top, height - padding.bottom]);
 
   const x = d3
     .scaleLinear()
@@ -122,7 +122,9 @@ const Chart = () => {
       .style("fill", "transparent")
       .on("mouseenter", (event, [message]) => setFocus(message))
       .on("mouseleave", () => setFocus(null))
-      .on("dblclick", (event, [message]) => setYAxisType("point", message.id));
+      .on("dblclick", (event, [message]) =>
+        setYAxisType(yAxis.type === "point" ? "time" : "point", message.id)
+      );
   }
 
   return <svg ref={svgRef} width={width} height={height} />;

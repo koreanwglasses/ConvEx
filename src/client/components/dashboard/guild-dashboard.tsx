@@ -41,6 +41,7 @@ const useStyles = makeStyles((theme) => ({
   channelCard: {
     width: 400,
     height: 800,
+    marginBottom: theme.spacing(2),
   },
 }));
 

@@ -130,7 +130,7 @@ const FullMessageList = ({
   const classes = useStyles();
 
   const { width, height } = useChartSize();
-  const { y } = useAxes([padding.top, height - padding.bottom]);
+  const { y, yAxis } = useAxes([padding.top, height - padding.bottom]);
   const { setYAxisType } = useDispatch();
 
   const removedMessages = useRef(new Map<Message, NodeJS.Timeout>());
@@ -189,7 +189,10 @@ const FullMessageList = ({
                 : undefined,
             }}
             onDoubleClick={() => {
-              setYAxisType("point", message.id);
+              setYAxisType(
+                yAxis.type === "point" ? "time" : "point",
+                message.id
+              );
             }}
             onMouseEnter={() => setFocus(message)}
             onMouseLeave={() => setFocus()}
