@@ -182,7 +182,7 @@ const FullMessageList = ({
               pointerEvents: removedMessages.current.has(message)
                 ? "none"
                 : undefined,
-              zIndex: removedMessages.current.has(message) ? -1 : 0,
+              zIndex: removedMessages.current.has(message) ? -1 : undefined,
             }}
             onDoubleClick={() => {
               setYAxisType(
