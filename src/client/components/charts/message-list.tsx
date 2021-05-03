@@ -1,7 +1,6 @@
 import { makeStyles } from "@material-ui/core";
-import * as d3 from "d3";
 import { Result } from "perspective-api-client";
-import React, { useEffect, useMemo, useRef } from "react";
+import React, { useMemo, useRef } from "react";
 import { compareTuple } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
@@ -195,78 +194,5 @@ const FullMessageList = ({
           />
         ))}
     </div>
-  );
-};
-
-const TransitionMessageList = ({
-  messages,
-  analyses,
-  pivot,
-}: {
-  messages: Message[];
-  analyses: Map<
-    string,
-    {
-      error: Error;
-      result: Result;
-    }
-  >;
-  pivot?: string;
-}) => {
-  const { width, height } = useChartSize();
-  const { y } = useAxes([padding.top, height - padding.bottom]);
-
-  const svgRef = useRef<SVGSVGElement>();
-  const selections = useRef<{
-    svg: d3.Selection<SVGSVGElement, unknown, null, undefined>;
-  }>();
-
-  useEffect(() => {
-    /* Initialization. Runs once */
-    const svg = d3.select(svgRef.current);
-    selections.current = { svg };
-  }, []);
-
-  if (selections.current && y) {
-    /* Drawing. Runs whenever height, width, data, etc. are updated */
-    const { svg } = selections.current;
-
-    svg
-      .selectAll("rect")
-      .data(messages, (message: Message) => message.id)
-      .join("rect")
-      .attr("x", 0)
-      .attr("width", width)
-      .attr("y", (message) => y(message) - messageHeight / 2)
-      .attr("height", messageHeight)
-      .attr("rx", messageHeight / 2)
-      .attr("ry", messageHeight / 2)
-      .attr("fill", (message) => {
-        const analysis = analyses.get(message.id)?.result;
-        return analysis
-          ? d3.interpolateYlOrRd(
-              analysis.attributeScores.TOXICITY.summaryScore.value
-            )
-          : "white";
-      });
-  }
-
-  const pivotMessage = messages.find(({ id }) => id === pivot);
-
-  return (
-    <>
-      <svg ref={svgRef} width={width} height={height} />
-      {pivotMessage && (
-        <MessageView
-          message={pivotMessage}
-          analysis={analyses?.get(pivot)}
-          style={{
-            top: y?.(pivotMessage) - messageHeight / 2,
-            position: "absolute",
-            width,
-          }}
-        />
-      )}
-    </>
   );
 };
