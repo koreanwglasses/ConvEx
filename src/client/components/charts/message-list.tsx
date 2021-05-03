@@ -62,8 +62,7 @@ const Chart = () => {
     analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
       .value ?? 0;
 
-  const overlapThreshold =
-    transitionAlpha < 1 && yAxis.type === "time" ? 0.5 : 0.2;
+  const overlapThreshold = 0.2;
 
   const messagesToShow = useMemo(() => {
     if (yAxis.type === "point" && transitionAlpha === 1) return messages;
@@ -102,15 +101,7 @@ const Chart = () => {
     focus,
   ]);
 
-  return transitionAlpha < 1 ? (
-    <TransitionMessageList
-      messages={messagesToShow}
-      analyses={analyses}
-      pivot={transitionPivot}
-    />
-  ) : (
-    <FullMessageList messages={messagesToShow} analyses={analyses} />
-  );
+  return <FullMessageList messages={messagesToShow} analyses={analyses} />;
 };
 
 const FullMessageList = ({
@@ -129,7 +120,10 @@ const FullMessageList = ({
   const classes = useStyles();
 
   const { width, height } = useChartSize();
-  const { y, yAxis } = useAxes([padding.top, height - padding.bottom]);
+  const { y, yAxis, transitionAlpha } = useAxes([
+    padding.top,
+    height - padding.bottom,
+  ]);
   const { setYAxisType } = useDispatch();
 
   const removedMessages = useRef(new Map<Message, NodeJS.Timeout>());
@@ -137,24 +131,29 @@ const FullMessageList = ({
   const currentMessages = new Set(messages);
 
   /** Determine which messages were removed and add to remove list */
-  prevMessages.current.forEach((message) => {
-    if (
-      !currentMessages.has(message) &&
-      !removedMessages.current.has(message)
-    ) {
-      removedMessages.current.set(
-        message,
-        setTimeout(() => {
-          removedMessages.current.delete(message);
-        }, 250)
-      );
-    }
-  });
+  if (transitionAlpha >= 1) {
+    prevMessages.current.forEach((message) => {
+      if (
+        !currentMessages.has(message) &&
+        !removedMessages.current.has(message)
+      ) {
+        removedMessages.current.set(
+          message,
+          setTimeout(() => {
+            removedMessages.current.delete(message);
+          }, 250)
+        );
+      }
+    });
+  } else {
+    removedMessages.current.forEach(clearTimeout);
+    removedMessages.current.clear();
+  }
 
   /** Determine which removed messages are back */
-  removedMessages.current.forEach((_, message) => {
+  removedMessages.current.forEach((timeout, message) => {
     if (currentMessages.has(message)) {
-      clearTimeout(removedMessages.current.get(message));
+      clearTimeout(timeout);
       removedMessages.current.delete(message);
     }
   });
@@ -183,6 +182,7 @@ const FullMessageList = ({
               pointerEvents: removedMessages.current.has(message)
                 ? "none"
                 : undefined,
+              zIndex: removedMessages.current.has(message) ? -1 : 0,
             }}
             onDoubleClick={() => {
               setYAxisType(
