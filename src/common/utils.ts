@@ -186,3 +186,32 @@ export const compareTuple = <T extends unknown[]>(a: [...T], b: [...T]) => {
   }
   return 0;
 };
+
+export type SortedArray<T> = readonly T[] & {
+  insert(item: T): number;
+};
+export const sortedArray = <T>(
+  key: (value: T) => number,
+  arr: T[] = []
+): SortedArray<T> =>
+  Object.assign(arr as readonly T[], {
+    insert(item: T) {
+      if (arr.length === 0) {
+        arr.push(item);
+        return 0;
+      } else {
+        const i = indexOfFirstPositive_nonDecreasingMap(
+          arr,
+          (item2) => key(item2) - key(item)
+        );
+
+        if (i === -1) {
+          arr.push(item);
+          return arr.length - 1;
+        } else {
+          arr.splice(i, 0, item);
+          return i;
+        }
+      }
+    },
+  });
