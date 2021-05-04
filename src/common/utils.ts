@@ -214,4 +214,13 @@ export const sortedArray = <T>(
         }
       }
     },
+
+    filterByKey(key: number) {
+       const i = indexOfFirstPositive_nonDecreasingMap(
+          arr,
+          (item2) => key(item2) - key(item)
+        );
+
+
+    }
   });
