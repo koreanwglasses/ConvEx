@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from "react";
 import { groupBy } from "../../../common/utils";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
+import { useGroupedMessages } from "../common/aggregator";
 import { ChartContainer, useChartSize } from "./chart-container";
 import {
   useAxes,
@@ -17,6 +18,8 @@ export const UserLines = ({ showScale = false }: { showScale?: boolean }) => (
     <Chart showScale={showScale} />
   </ChartContainer>
 );
+
+const messageHeight = 10;
 
 const Chart = ({ showScale }: { showScale: boolean }) => {
   const { width, height } = useChartSize();
@@ -60,7 +63,16 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
 
   const messages = useMessages();
   const analyses = useAnalyses(messages);
-  const flatData = messages.map(
+
+  const overlapThreshold = 0.5;
+
+  const messagesToShow = useGroupedMessages({
+    y,
+    messageHeight,
+    overlapThreshold,
+  }).map((group) => group.top);
+
+  const flatData = messagesToShow.map(
     (message) => [message, analyses?.get(message.id)?.result] as const
   );
   const data = [...groupBy(flatData, ([message]) => message.authorID).values()];

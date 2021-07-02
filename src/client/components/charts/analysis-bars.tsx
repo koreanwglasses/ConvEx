@@ -8,6 +8,7 @@ import {
   useFocus,
   useMessages,
 } from "../charts/message-scroller";
+import { useGroupedMessages } from "../common/aggregator";
 
 export const AnalysesBars = ({
   showScale = false,
@@ -18,6 +19,8 @@ export const AnalysesBars = ({
     <Chart showScale={showScale} />
   </ChartContainer>
 );
+
+const messageHeight = 10;
 
 const Chart = ({ showScale }: { showScale: boolean }) => {
   const { width, height } = useChartSize();
@@ -50,7 +53,16 @@ const Chart = ({ showScale }: { showScale: boolean }) => {
 
   const messages = useMessages();
   const analyses = useAnalyses(messages);
-  const data = messages.map(
+
+  const overlapThreshold = 0.2;
+
+  const messagesToShow = useGroupedMessages({
+    y,
+    messageHeight,
+    overlapThreshold,
+  }).map((group) => group.top);
+
+  const data = messagesToShow.map(
     (message) => [message, analyses?.get(message.id)?.result] as const
   );
 

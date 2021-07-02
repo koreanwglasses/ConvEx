@@ -33,7 +33,7 @@ class MessageManager {
   constructor(
     readonly guildId: string,
     readonly channelId: string,
-    readonly pageSize = 100
+    readonly pageSize = 10
   ) {}
 
   private get last() {

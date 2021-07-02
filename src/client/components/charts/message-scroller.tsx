@@ -18,7 +18,7 @@ import { MessageScrollerToolbar } from "./toolbar";
 
 const DEBUG = true;
 const DEFAULT_STEP = 60;
-const DEFAULT_TIMESPAN = 1000 * 60 * 60 * 24;
+const DEFAULT_TIMESPAN = 1000 * 60 * 60;
 
 /////////////
 // Reducer //

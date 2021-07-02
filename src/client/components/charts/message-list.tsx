@@ -1,9 +1,9 @@
 import { makeStyles } from "@material-ui/core";
 import { Result } from "perspective-api-client";
-import React, { useMemo, useRef } from "react";
-import { compareTuple } from "../../../common/utils";
+import React, { useRef } from "react";
 import { Message } from "../../../endpoints";
 import { useAnalyses } from "../../hooks/use-analyses";
+import { useGroupedMessages } from "../common/aggregator";
 import { MessageView } from "../message/message-view";
 import { ChartContainer, useChartSize } from "./chart-container";
 import {
@@ -31,74 +31,18 @@ const messageHeight = 56;
 
 const Chart = () => {
   const { height } = useChartSize();
-  const { y, transitionAlpha, transitionPivot, yAxis } = useAxes([
-    padding.top,
-    height - padding.bottom,
-  ]);
+  const { y } = useAxes([padding.top, height - padding.bottom]);
 
   const messages = useMessages();
   const analyses = useAnalyses(messages);
 
-  const [focus] = useFocus();
-
-  /* Remove messages that run into each other */
-  const computeBounds = (message: Message) => {
-    const y_ = y(message);
-    const top = y_ - messageHeight / 2;
-    const bottom = y_ + messageHeight / 2;
-    return [top, bottom] as const;
-  };
-  const overlap = (message1: Message, message2: Message) => {
-    const [top1, bottom1] = computeBounds(message1);
-    const [top2, bottom2] = computeBounds(message2);
-    const x = (bottom2 - top1) / messageHeight;
-    const y = (bottom1 - top2) / messageHeight;
-
-    if (x < 0 || y < 0) return 0;
-    return Math.min(x, y);
-  };
-  const score = (message: Message) =>
-    analyses?.get(message.id)?.result?.attributeScores.TOXICITY.summaryScore
-      .value ?? 0;
-
   const overlapThreshold = 0.2;
 
-  const messagesToShow = useMemo(() => {
-    if (yAxis.type === "point" && transitionAlpha === 1) return messages;
-
-    const messagesToShow: Message[] = [];
-    messages.forEach((message) => {
-      if (!messagesToShow.length) {
-        messagesToShow.push(message);
-        return;
-      }
-      const lastMessage = messagesToShow[messagesToShow.length - 1];
-      if (overlap(message, lastMessage) < overlapThreshold) {
-        messagesToShow.push(message);
-        return;
-      }
-
-      const isFocused = message.authorID === focus?.authorID;
-      const isLastFocused = lastMessage.authorID === focus?.authorID;
-      if (
-        compareTuple(
-          [isFocused, score(message)],
-          [isLastFocused, score(lastMessage)]
-        ) > 0
-      ) {
-        messagesToShow[messagesToShow.length - 1] = message;
-      }
-    });
-    return messagesToShow;
-  }, [
-    messages[0]?.id,
-    messages.length && messages[messages.length - 1].id,
+  const messagesToShow = useGroupedMessages({
     y,
-    analyses,
+    messageHeight,
     overlapThreshold,
-    transitionAlpha,
-    focus,
-  ]);
+  }).map((group) => group.top);
 
   return <FullMessageList messages={messagesToShow} analyses={analyses} />;
 };
