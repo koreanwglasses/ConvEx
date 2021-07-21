@@ -16,6 +16,8 @@ export const start = () =>
 
 export type Permission = PermissionString | "IS_MEMBER";
 
+export const basePermissions = [] as const;
+
 /**
  * Checks for a user's permission within a guild/channel. Returns false if user
  * is not member of guild
@@ -57,7 +59,7 @@ export const hasPermissions = async (
     guildId: string;
     channelId?: string;
   },
-  permissions: Permission[]
+  permissions: readonly Permission[]
 ) => {
   const guild = await client.guilds.fetch(guildId);
   /* TODO: Better error checking. Figure out which error specifically means

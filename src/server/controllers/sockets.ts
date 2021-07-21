@@ -61,7 +61,7 @@ export const init = () => {
               guildId,
               channelId,
             },
-            ["MANAGE_GUILD", "VIEW_CHANNEL"]
+            [...Discord.basePermissions, "VIEW_CHANNEL"]
           ))
         ) {
           return socket.emit("error", "Forbidden");
