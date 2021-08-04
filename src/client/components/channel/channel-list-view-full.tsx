@@ -1,5 +1,6 @@
 import React from "react";
 import { AnalysesBars } from "../charts/analysis-bars";
+import { KDE } from "../charts/kde";
 import { MessageList } from "../charts/message-list";
 import { MessageScroller } from "../charts/message-scroller";
 import { UserLines } from "../charts/user-lines";
@@ -25,5 +26,7 @@ export const ChannelListView = ({
     <AnalysesBars showScale />
     <YAxis compact />
     <UserLines showScale />
+    <YAxis compact />
+    <KDE />
   </MessageScroller>
 );
