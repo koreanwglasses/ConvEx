@@ -16,7 +16,7 @@ export const start = () =>
 
 export type Permission = PermissionString | "IS_MEMBER";
 
-export const basePermissions = [] as const;
+export const basePermissions = ["IS_MEMBER"] as const;
 
 /**
  * Checks for a user's permission within a guild/channel. Returns false if user
