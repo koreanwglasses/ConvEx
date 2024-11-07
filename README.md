@@ -1,7 +1,5 @@
 # Quickstart
 
-*Try it out here! http://dev.fred-choi.com/*
-
 **Prerequisites.** Ensure that you have `node` and `yarn` installed on your
 command line.
 
